@@ -1,5 +1,6 @@
 package com.example
 
+import com.papsign.ktor.openapigen.OpenAPIGen
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {

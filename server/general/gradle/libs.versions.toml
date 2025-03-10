@@ -7,8 +7,11 @@ logback-version = "1.4.14"
 postgres-version = "42.7.4"
 
 [libraries]
+openapigen = { module = "com.github.papsign:Ktor-OpenAPI-Generator", version = "646f366" }
 ktor-server-core = { module = "io.ktor:ktor-server-core-jvm", version.ref = "ktor-version" }
+ktor-server-cors = { module = "io.ktor:ktor-server-cors", version.ref = "ktor-version" }
 ktor-server-swagger = { module = "io.ktor:ktor-server-swagger-jvm", version.ref = "ktor-version" }
+ktor-server-openapi = { module = "io.ktor:ktor-server-openapi", version.ref = "ktor-version" }
 ktor-simple-cache = { module = "com.ucasoft.ktor:ktor-simple-cache", version = "0.50.7" }
 ktor-simple-redis-cache = { module = "com.ucasoft.ktor:ktor-simple-redis-cache-jvm", version = "0.50.7" }
 ktor-server-rate-limiting = { module = "io.github.flaxoos:ktor-server-rate-limiting", version = "2.1.1" }
