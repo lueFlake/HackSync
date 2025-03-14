@@ -9,8 +9,9 @@ import java.sql.Connection
 import java.sql.DriverManager
 
 fun Application.configureDatabases() {
-    val dbConnection: Connection = connectToPostgres(embedded = true)
+    val dbConnection: Connection = connectToPostgres(embedded = true) // это не трогал
     val cityService = CityService(dbConnection)
+    val userService = UserService(dbConnection) // вроде так
     
     routing {
     
@@ -46,6 +47,49 @@ fun Application.configureDatabases() {
             cityService.delete(id)
             call.respond(HttpStatusCode.OK)
         }
+
+        // Create user
+        post("/users") {
+            // Получаем данные пользователя из тела запроса
+            val user = call.receive<User>()
+            val userId = userService.create(user)
+            // Возвращаем HTTP-статус 201 Created и ID созданного пользователя
+            call.respond(HttpStatusCode.Created, userId)
+        }
+
+        // Read user
+        get("/users/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("Invalid ID")
+            try {
+                val user = userService.read(id)
+                call.respond(HttpStatusCode.OK, user)
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.NotFound, "User not found")
+            }
+        }
+
+        // Update user
+        put("/users/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("Invalid ID")
+            val user = call.receive<User>()
+            try {
+                userService.update(id, user)
+                call.respond(HttpStatusCode.OK, "User updated successfully")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.BadRequest, "Failed to update user")
+            }
+        }
+
+        // Delete user
+        delete("/users/{id}") {
+            val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("Invalid ID")
+            try {
+                userService.delete(id)
+                call.respond(HttpStatusCode.OK, "User deleted successfully")
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.NotFound, "User not found")
+            }
+        }
     }
 }
 
@@ -70,7 +114,7 @@ fun Application.configureDatabases() {
  * @return [Connection] that represent connection to the database. Please, don't forget to close this connection when
  * your application shuts down by calling [Connection.close]
  * */
-fun Application.connectToPostgres(embedded: Boolean): Connection {
+fun Application.connectToPostgres(embedded: Boolean): Connection { // это не трогал
     Class.forName("org.postgresql.Driver")
     if (embedded) {
         log.info("Using embedded H2 database for testing; replace this flag to use postgres")
