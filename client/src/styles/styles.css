@@ -1,0 +1,38 @@
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+.table-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.events-header {
+  margin-bottom: 1rem;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ant-form {
+  max-width: 600px;
+  margin: 20px 0;
+}
+
+.ant-btn-primary {
+  background-color: #b29262 !important; /* Синий цвет */
+  border-color: #b29262 !important;
+  border-radius: 8px !important;
+  padding: 8px 24px !important;
+}
+
+.ant-btn-primary:hover {
+  background-color: #9c8056 !important;
+  border-color: #9c8056 !important;
+}
+
+.ant-btn-default {
+  border-radius: 8px !important;
+  padding: 8px 24px !important;
+}
