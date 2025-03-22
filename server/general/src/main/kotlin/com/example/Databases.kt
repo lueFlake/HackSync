@@ -36,7 +36,7 @@ fun Application.configureDatabases() {
                 val user = userService.read(id)
                 call.respond(HttpStatusCode.OK, user)
             } catch (e: Exception) {
-                call.respond(HttpStatusCode.NotFound, "User not found")
+                call.respond(HttpStatusCode.NotFound, "User not found: $e")
             }
         }
 

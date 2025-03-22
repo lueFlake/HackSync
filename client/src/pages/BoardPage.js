@@ -7,7 +7,7 @@ const BoardPage = ({ event }) => {
   return (
     <PageContainer>
       <Typography variant="h4" gutterBottom>
-          Доска задач: {event?.name || 'Событие не выбрано'}
+        Доска задач: {event?.name || 'Событие не выбрано'}
       </Typography>
       <KanbanBoard />
     </PageContainer>

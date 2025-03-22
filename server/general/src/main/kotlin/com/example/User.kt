@@ -1,5 +1,6 @@
 package com.example
 
+import io.ktor.server.application.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.Contextual
@@ -100,7 +101,7 @@ class UserService(private val connection: Connection) {
                 updatedAt    = resultSet.getTimestamp("UPDATED_AT").toLocalDateTime())
         } else {
             // мб надо поработать с тем какие именно ошибки прокидывать
-            throw Exception("User not found")
+            throw Exception("User nottt found")
         }
     }
 

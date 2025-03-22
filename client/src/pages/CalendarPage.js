@@ -137,7 +137,9 @@ const CalendarPage = () => {
           icon={<LeftOutlined />} 
           onClick={() => changeMonth(-1)}
         />
-        <h2>{capitalizeFirstLetter(currentDate.format('MMMM'))} {currentDate.format('YYYY')}</h2>
+        <Typography variant="h5">
+          {capitalizeFirstLetter(currentDate.format('MMMM'))} {currentDate.format('YYYY')}
+        </Typography>
         <Button 
           type="primary" 
           shape="circle" 
