@@ -1,6 +1,7 @@
 package com.example
 
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.sql.Connection
@@ -19,13 +20,13 @@ data class User(val id: Int = 0,
                 val name: String,
                 val avatarUrl: String ?= null,
                 @Contextual
-                val createdAt: LocalDateTime,
+                val createdAt: LocalDateTime = LocalDateTime.now(),
                 @Contextual
-                val updatedAt: LocalDateTime)
+                val updatedAt: LocalDateTime = LocalDateTime.now())
 
 class UserService(private val connection: Connection) {
     companion object {
-        private val CREATE_TABLE_USERS = """CREATE TABLE USERS (
+        private val CREATE_TABLE_USERS = """CREATE TABLE IF NOT EXISTS USERS (
             ID SERIAL PRIMARY KEY, 
             EMAIL VARCHAR(255), 
             PASSWORD_HASH VARCHAR(255), 
@@ -36,7 +37,7 @@ class UserService(private val connection: Connection) {
             UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         );""".trimIndent()
         private val SELECT_USER_BY_ID = """
-            SELECT EMAIL, PASSWORD_HASH, ROLE, NAME, AVATAR_URL, CREATED_AT, UPDATED_AT 
+            SELECT ID, EMAIL, PASSWORD_HASH, ROLE, NAME, AVATAR_URL, CREATED_AT, UPDATED_AT 
             FROM USERS 
             WHERE ID = ?
         """.trimIndent()
@@ -45,7 +46,7 @@ class UserService(private val connection: Connection) {
             VALUES (?, ?, ?, ?, ?)
         """.trimIndent()
         private val UPDATE_USER_BY_ID = """
-            UPDATE users 
+            UPDATE USERS 
             SET EMAIL = ?, ROLE = ?, NAME = ?, AVATAR_URL = ?, UPDATED_AT = NOW() 
             WHERE ID = ?
         """.trimIndent()
@@ -64,12 +65,13 @@ class UserService(private val connection: Connection) {
     // Create new user
     suspend fun create(user: User): Int = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)
-        // копипаста с функцией update
         statement.setString(1, user.email)
         statement.setString(2, user.passwordHash)
         statement.setString(3, user.role.name)
         statement.setString(4, user.name)
         statement.setString(5, user.avatarUrl)
+
+        statement.executeUpdate()
 
         val generatedKeys = statement.generatedKeys
         if (generatedKeys.next()) {
@@ -105,11 +107,11 @@ class UserService(private val connection: Connection) {
     // Update a user by id
     suspend fun update(id: Int, user: User) = withContext(Dispatchers.IO) {
         val statement = connection.prepareStatement(UPDATE_USER_BY_ID)
-        // копипаста с функцией create
         statement.setString(1, user.email)
         statement.setString(2, user.role.name)
         statement.setString(3, user.name)
         statement.setString(4, user.avatarUrl)
+        statement.setInt(5, id)
         statement.executeUpdate()
     }
 
