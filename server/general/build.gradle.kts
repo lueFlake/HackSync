@@ -5,7 +5,7 @@ plugins {
     alias(libs.plugins.kotlin.plugin.serialization)
 }
 
-group = "com.example"
+group = "com.hacksync"
 version = "0.0.1"
 
 application {
@@ -41,6 +41,8 @@ dependencies {
     implementation(libs.ktor.server.netty)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+    implementation("io.insert-koin:koin-ktor:4.1.0-Beta5")
+    implementation("io.insert-koin:koin-logger-slf4j:4.1.0-Beta5")
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }
