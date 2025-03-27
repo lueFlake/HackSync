@@ -1,23 +1,46 @@
 import React from 'react';
-import { Typography, Box, List, ListItem, ListItemText } from '@mui/material';
+import { Typography } from 'antd';
 import PageContainer from '../components/PageContainer';
+import MyTasksTable from '../components/MyTasksTable';
+
+const { Text } = Typography;
 
 const MyTasksPage = ({ event }) => {
+  // Статичные данные задач
+  const tasks = [
+    {
+      id: 1,
+      name: 'Реализовать авторизацию',
+      description: 'Добавить JWT-аутентификацию на бэкенде',
+      status: 'in_progress',
+      priority: 'high',
+      deadline: '2023-12-15'
+    },
+    {
+      id: 2,
+      name: 'Написать тесты для API',
+      description: 'Покрыть модульными тестами основные endpoints',
+      status: 'review',
+      priority: 'medium',
+      deadline: '2023-12-20'
+    },
+    {
+      id: 3,
+      name: 'Исправить баг с роутингом',
+      description: 'При перезагрузке страницы теряется текущий route',
+      status: 'todo',
+      priority: 'critical',
+      deadline: '2023-12-10'
+    }
+  ];
+
   return (
     <PageContainer>
-      <Box p={3}>
-      <Typography variant="h4" gutterBottom>
-          Мои задачи: {event?.name || 'Событие не выбрано'}
-      </Typography>
-      <List>
-          <ListItem>
-          <ListItemText primary="Пример задачи 1" secondary="Статус: В работе" />
-          </ListItem>
-          <ListItem>
-          <ListItemText primary="Пример задачи 2" secondary="Статус: На проверке" />
-          </ListItem>
-      </List>
-      </Box>
+      <Text strong style={{ fontSize: 24, display: 'block', marginBottom: 16 }}>
+        Мои задачи: {event?.name || 'Текущий проект'}
+      </Text>
+
+      <MyTasksTable tasks={tasks} />
     </PageContainer>
   );
 };
