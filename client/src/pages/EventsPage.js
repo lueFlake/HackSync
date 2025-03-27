@@ -48,10 +48,7 @@ const EventsPage = () => {
   };
 
   return (
-    <PageContainer>
-      <Typography variant="h4" gutterBottom>
-          События
-      </Typography>
+    <PageContainer title={"События"}>
       <Button
         type="primary"
         onClick={handleCreateStart}

@@ -146,14 +146,14 @@ const ChatPage = ({ event }) => {
   }, [isResizing]);
 
   return (
-    <PageContainer>
+    <PageContainer title={`Чат: ${event?.name || 'Событие не выбрано'}`}>
       <Box p={3}>
         {/* Заголовок чата */}
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        {/*<Box display="flex" justifyContent="space-between" alignItems="center">
           <Typography variant="h4" gutterBottom>
             Чат: {event?.name || 'Событие не выбрано'}
           </Typography>
-        </Box>
+        </Box>*/}
 
         {/* Контейнер сообщений */}
         <Box

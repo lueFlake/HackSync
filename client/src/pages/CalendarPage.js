@@ -111,10 +111,7 @@ const CalendarPage = () => {
   };
 
   return (
-    <PageContainer>
-    <Typography variant="h4" gutterBottom>
-        Календарь событий
-    </Typography>
+    <PageContainer title="Календарь событий">
     <div className="calendar-container">
     <div className="calendar-header">
       <div className="year-selector">

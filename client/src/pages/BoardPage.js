@@ -5,10 +5,7 @@ import KanbanBoard from '../components/KanbanBoard';
 
 const BoardPage = ({ event }) => {
   return (
-    <PageContainer>
-      <Typography variant="h4" gutterBottom>
-        Доска задач: {event?.name || 'Событие не выбрано'}
-      </Typography>
+    <PageContainer title={`Доска задач: ${event?.name || 'Событие не выбрано'}`}>
       <KanbanBoard />
     </PageContainer>
   );

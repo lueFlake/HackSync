@@ -3,8 +3,6 @@ import { Typography } from 'antd';
 import PageContainer from '../components/PageContainer';
 import MyTasksTable from '../components/MyTasksTable';
 
-const { Text } = Typography;
-
 const MyTasksPage = ({ event }) => {
   // Статичные данные задач
   const tasks = [
@@ -35,11 +33,7 @@ const MyTasksPage = ({ event }) => {
   ];
 
   return (
-    <PageContainer>
-      <Text strong style={{ fontSize: 24, display: 'block', marginBottom: 16 }}>
-        Мои задачи: {event?.name || 'Текущий проект'}
-      </Text>
-
+    <PageContainer title={`Мои задачи: ${event?.name || 'Текущий проект'}`}>
       <MyTasksTable tasks={tasks} />
     </PageContainer>
   );

@@ -1,6 +1,6 @@
-import { Box } from '@mui/material';
+import { Typography, Box } from '@mui/material';
 
-const PageContainer = ({ children }) => {
+const PageContainer = ({ children, title }) => {
   return (
     <Box 
       sx={{
@@ -9,6 +9,9 @@ const PageContainer = ({ children }) => {
         backgroundColor: '#f5f5f5'
       }}
     >
+      <Typography strong style={{ fontSize: 24, display: 'block', marginBottom: 16 }}>
+        {title}
+      </Typography>
       {children}
     </Box>
   );

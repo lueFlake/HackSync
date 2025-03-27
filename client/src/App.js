@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { styled } from '@mui/material/styles';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { ThemeProvider } from '@mui/material/styles';
 import Menu from './components/Menu';
 import TopBar from './components/TopBar';
 import EventsPage from './pages/EventsPage';
@@ -10,7 +10,7 @@ import CalendarPage from './pages/CalendarPage';
 import MyTasksPage from './pages/MyTasksPage';
 import ChatPage from './pages/ChatPage';
 import moment from 'moment';
-const theme = createTheme();
+import theme from './theme'
 
 const AppContainer = styled('div')({
   display: 'flex',
