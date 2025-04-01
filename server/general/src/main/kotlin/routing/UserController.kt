@@ -1,10 +1,6 @@
 package routing
 
-import com.example.User
-import commands.*
-import dtos.extensions.toDto
-import dtos.requests.CreateUserDto
-import dtos.requests.UpdateUserDto
+import entities.User
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.request.*
@@ -14,6 +10,7 @@ import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.scope
 import repositories.UserRepository
 import services.UserService
+import java.util.*
 
 fun Route.addUserRoutes () {
 
@@ -29,7 +26,7 @@ fun Route.addUserRoutes () {
 
     // Read user
     get("/users/{id}") {
-        val id = call.parameters["id"]?.toIntOrNull()
+        val id = UUID.fromString(call.parameters["id"])
         val userService = call.scope.get<UserService>()
         if (id == null) {
             call.respond(HttpStatusCode.BadRequest, "Invalid ID")
@@ -46,8 +43,9 @@ fun Route.addUserRoutes () {
 
     // Update user
     put("/users/{id}") {
-        val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("Invalid ID")
+        val id = UUID.fromString(call.parameters["id"])
         val user = call.receive<User>()
+        val userService = call.scope.get<UserService>()
         try {
             userService.update(id, user)
             call.respond(HttpStatusCode.OK, "User updated successfully")
@@ -58,7 +56,8 @@ fun Route.addUserRoutes () {
 
     // Delete user
     delete("/users/{id}") {
-        val id = call.parameters["id"]?.toIntOrNull() ?: throw IllegalArgumentException("Invalid ID")
+        val id = UUID.fromString(call.parameters["id"])
+        val userService = call.scope.get<UserService>()
         try {
             userService.delete(id)
             call.respond(HttpStatusCode.OK, "User deleted successfully")

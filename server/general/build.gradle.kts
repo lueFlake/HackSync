@@ -43,6 +43,11 @@ dependencies {
     implementation(libs.ktor.server.config.yaml)
     implementation("io.insert-koin:koin-ktor:4.1.0-Beta5")
     implementation("io.insert-koin:koin-logger-slf4j:4.1.0-Beta5")
+    implementation(libs.exposed.core)
+    implementation(libs.exposed.jdbc)
+    implementation(libs.exposed.dao)
+    implementation(libs.exposed.java.time)
+    implementation(libs.hikaricp)
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }

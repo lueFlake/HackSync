@@ -1,76 +1,29 @@
 package services
 
-import com.example.Role
-import com.example.User
+import entities.Role
+import entities.User
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.koin.ktor.plugin.Koin
 import org.koin.dsl.module
+import repositories.UserDAO
 import repositories.UserRepository
+import repositories.UserTable.role
 import java.sql.Connection
 import java.sql.Statement
+import java.util.*
 
 class UserService(private val userRepository: UserRepository) {
-    companion object {
-        private val CREATE_TABLE_USERS = """CREATE TABLE IF NOT EXISTS USERS (
-            ID SERIAL PRIMARY KEY, 
-            EMAIL VARCHAR(255), 
-            PASSWORD_HASH VARCHAR(255), 
-            ROLE VARCHAR(20) NOT NULL CHECK (role IN ('PARTICIPANT', 'CAPTAIN', 'MODERATOR')), 
-            NAME VARCHAR(255),
-            AVATAR_URL VARCHAR(255),
-            CREATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UPDATED_AT TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        );""".trimIndent()
-        private val SELECT_USER_BY_ID = """
-            SELECT ID, EMAIL, PASSWORD_HASH, ROLE, NAME, AVATAR_URL, CREATED_AT, UPDATED_AT 
-            FROM USERS 
-            WHERE ID = ?
-        """.trimIndent()
-        private val INSERT_USER = """
-            INSERT INTO USERS (EMAIL, PASSWORD_HASH, ROLE, NAME, AVATAR_URL) 
-            VALUES (?, ?, ?, ?, ?)
-        """.trimIndent()
-        private val UPDATE_USER_BY_ID = """
-            UPDATE USERS 
-            SET EMAIL = ?, ROLE = ?, NAME = ?, AVATAR_URL = ?, UPDATED_AT = NOW() 
-            WHERE ID = ?
-        """.trimIndent()
-        private const val DELETE_USER_BY_ID = "DELETE FROM USERS WHERE ID = ?"
-    }
-
-    init {
-        val statement = connection.createStatement()
-        statement.executeUpdate(CREATE_TABLE_USERS)
-    }
-
-//    private var newUserId = 0
-
-
-    // Create new user
-    suspend fun create(user: User): Int = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)
-        statement.setString(1, user.email)
-        statement.setString(2, user.passwordHash)
-        statement.setString(3, user.role.name)
-        statement.setString(4, user.name)
-        statement.setString(5, user.avatarUrl)
-
-        statement.executeUpdate()
-
-        val generatedKeys = statement.generatedKeys
-        if (generatedKeys.next()) {
-            return@withContext generatedKeys.getInt(1)
-        } else {
-            // мб надо поработать с тем какие именно ошибки прокидывать
-            throw Exception("Unable to retrieve the id of the newly inserted user")
-        }
-    }
-
-
     // Read a user by id
-    suspend fun read(id: Int): User = withContext(Dispatchers.IO) {
-        val statement = connection.prepareStatement(SELECT_USER_BY_ID)
+    suspend fun read(id: UUID): User {
+        val dao = userRepository.getById(id);
+        return User(
+            id = dao?.id?.value!!,
+            name = dao.name,
+            email = dao.email,
+            role = Role.valueOf(dao.role)
+        )
+        /*val statement = connection.prepareStatement(SELECT_USER_BY_ID)
         statement.setInt(1, id)
         val resultSet = statement.executeQuery()
         if (resultSet.next()) {
@@ -86,26 +39,60 @@ class UserService(private val userRepository: UserRepository) {
         } else {
             // мб надо поработать с тем какие именно ошибки прокидывать
             throw Exception("User nottt found")
-        }
+        }*/
+    }
+
+
+    // Create new user
+    suspend fun create(user: User): UUID {
+        return userRepository.insert {
+            name = user.name
+            email = user.email
+            password = user.passwordHash!!
+            role = user.role.toString()
+            avatarUrl = user.avatarUrl
+        }.id.value
+        /*val statement = connection.prepareStatement(INSERT_USER, Statement.RETURN_GENERATED_KEYS)
+        statement.setString(1, user.email)
+        statement.setString(2, user.passwordHash)
+        statement.setString(3, user.role.name)
+        statement.setString(4, user.name)
+        statement.setString(5, user.avatarUrl)
+
+        statement.executeUpdate()
+
+        val generatedKeys = statement.generatedKeys
+        if (generatedKeys.next()) {
+            return@withContext generatedKeys.getInt(1)
+        } else {
+            // мб надо поработать с тем какие именно ошибки прокидывать
+            throw Exception("Unable to retrieve the id of the newly inserted user")
+        }*/
     }
 
     // Update a user by id
-    suspend fun update(id: Int, user: User) = withContext(Dispatchers.IO) {
+    suspend fun update(id: UUID, user: User) {
+        userRepository.update(id) {
+            name = user.name
+            email = user.email
+            avatarUrl = user.avatarUrl
+        }
+        /*
         val statement = connection.prepareStatement(UPDATE_USER_BY_ID)
         statement.setString(1, user.email)
         statement.setString(2, user.role.name)
         statement.setString(3, user.name)
         statement.setString(4, user.avatarUrl)
         statement.setInt(5, id)
-        statement.executeUpdate()
+        statement.executeUpdate()*/
     }
 
-
-
     // Delete a user by id
-    suspend fun delete(id: Int) = withContext(Dispatchers.IO) {
+    suspend fun delete(id: UUID): Boolean {
+        return userRepository.delete(id)
+        /*
         val statement = connection.prepareStatement(DELETE_USER_BY_ID)
         statement.setInt(1, id)
-        statement.executeUpdate()
+        statement.executeUpdate()*/
     }
 }

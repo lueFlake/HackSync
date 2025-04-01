@@ -6,7 +6,9 @@ import io.ktor.server.routing.*
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.modules.SerializersModule
 import plugins.serialization.LocalDateTimeSerializer
+import plugins.serialization.UuidSerializer
 import java.time.LocalDateTime
+import java.util.UUID
 
 fun Application.configureSerialization() {
 
@@ -14,6 +16,7 @@ fun Application.configureSerialization() {
         json(Json {
             serializersModule = SerializersModule {
                 contextual(LocalDateTime::class, LocalDateTimeSerializer)
+                contextual(UUID::class, UuidSerializer)
             }
         })
     }

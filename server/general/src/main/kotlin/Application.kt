@@ -6,13 +6,13 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
-    configureHTTP()
-    configureAdministration()
-    configureSockets()
+    //configureHTTP()
+    //configureAdministration()
+    //configureSockets()
     configureSerialization()
     configureDatabases()
-    configureMonitoring()
-    configureSecurity()
+    //configureMonitoring()
+    //configureSecurity()
     configureRouting()
     configureInjection()
 }
