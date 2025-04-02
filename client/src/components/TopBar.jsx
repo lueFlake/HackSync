@@ -1,28 +1,50 @@
-import React from 'react';
-import { 
-  AppBar, 
-  Toolbar, 
-  Typography, 
-  IconButton, 
-  Menu, 
+import React, { useState } from 'react';
+import {
+  AppBar,
+  Toolbar,
+  Typography,
+  IconButton,
+  Menu,
   MenuItem,
   Box
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { Divider } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import AuthService from '../services/AuthService';
 
 const TopBar = ({ menuOpen, setMenuOpen }) => {
-  const [anchorEl, setAnchorEl] = React.useState(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(AuthService.isAuthenticated());
+  const navigate = useNavigate();
 
   const handleMenuToggle = () => {
     setMenuOpen(!menuOpen);
   };
 
+  const updateAuthStatus = () => {
+    setIsAuthenticated(AuthService.isAuthenticated());
+  };
+
+  const handleProfileClick = () => {
+    if (isAuthenticated) {
+      navigate('/profile');
+    } else {
+      navigate('/login', { state: { from: '/profile' } });
+    }
+  };
+
+  const handleLogout = () => {
+    AuthService.logout();
+    updateAuthStatus();
+    navigate('/login');
+  };
+
   return (
-    <AppBar 
+    <AppBar
       position="fixed"
-      sx={{ 
+      sx={{
         backgroundColor: '#414141',
         zIndex: (theme) => theme.zIndex.drawer + 1,
         height: 64,
@@ -45,19 +67,19 @@ const TopBar = ({ menuOpen, setMenuOpen }) => {
 
         {/* Логотип и название */}
         <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
-            <Box 
-                component="img"
-                src="/icons/HackSync.png"
-                alt="Лого"
-                sx={{ 
-                height: 60,
-                width: 60,
-                mr: 2 
-                }}
-            />
-          <Typography 
+          <Box
+            component="img"
+            src="/icons/HackSync.png"
+            alt="Лого"
+            sx={{
+              height: 60,
+              width: 60,
+              mr: 2
+            }}
+          />
+          <Typography
             variant="h5"
-            sx={{ 
+            sx={{
               fontWeight: 'bold',
               color: 'white',
               textTransform: 'uppercase'
@@ -81,9 +103,16 @@ const TopBar = ({ menuOpen, setMenuOpen }) => {
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
         >
-          <MenuItem onClick={() => setAnchorEl(null)}>Профиль</MenuItem>
-          <Divider style={{ margin: '8px 0' }} />
-          <MenuItem onClick={() => setAnchorEl(null)}>Выйти</MenuItem>
+          {/* !!!если не авторизованным пользователям можно только на авторизацию то это надо менять!!! */}
+          <MenuItem onClick={handleProfileClick}>
+            {isAuthenticated ? 'Профиль' : 'Войти'}
+          </MenuItem>
+          {isAuthenticated && (
+            <>
+              <Divider style={{ margin: '8px 0' }} />
+              <MenuItem onClick={handleLogout}>Выйти</MenuItem>
+            </>
+          )}
         </Menu>
       </Toolbar>
     </AppBar>

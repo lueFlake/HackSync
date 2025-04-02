@@ -4,7 +4,6 @@ import PageContainer from '../components/PageContainer';
 import MyTasksTable from '../components/MyTasksTable';
 
 const MyTasksPage = ({ event }) => {
-  // Статичные данные задач
   const tasks = [
     {
       id: 1,

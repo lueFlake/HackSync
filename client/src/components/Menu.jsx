@@ -1,6 +1,6 @@
 import React from 'react';
 import { Drawer, List, ListItem, ListItemIcon, ListItemText } from '@mui/material';
-import { 
+import {
   Event as EventIcon,
   Dashboard as DashboardIcon,
   CalendarToday as CalendarIcon,
@@ -17,13 +17,14 @@ const Menu = ({ open, setOpen }) => {
         '& .MuiDrawer-paper': {
           width: 240,
           boxSizing: 'border-box',
-          marginTop: '64px' // Высота верхней панели
+          marginTop: '64px'
         },
       }}
       variant="persistent"
       anchor="left"
       open={open}
     >
+      {/* ичпользование navigate или <Link> должно быть лучше */}
       <List>
         {[
           { text: 'События', icon: <EventIcon />, path: '/' },

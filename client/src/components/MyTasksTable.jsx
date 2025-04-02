@@ -1,3 +1,5 @@
+// здесь просто Ant описание страницы
+
 import React from 'react';
 import { Table, Tag } from 'antd';
 import { useNavigate } from 'react-router-dom';
@@ -20,10 +22,6 @@ const priorityMap = {
 const MyTasksTable = ({ tasks }) => {
   const navigate = useNavigate();
 
-  const handleRowClick = (id) => {
-    navigate(`/task/${id}`);
-  };
-
   const columns = [
     {
       title: "Номер задачи",
@@ -32,7 +30,7 @@ const MyTasksTable = ({ tasks }) => {
       render: (id) => (
         <a onClick={(e) => {
           e.preventDefault();
-          handleRowClick(id);
+          navigate(`/task/${id}`);
         }}>
           {id}
         </a>
@@ -88,7 +86,7 @@ const MyTasksTable = ({ tasks }) => {
       bordered
       size="middle"
       onRow={(record) => ({
-        onClick: () => handleRowClick(record.id),
+        onClick: () => navigate(`/task/${record.id}`),
       })}
     />
   );

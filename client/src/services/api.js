@@ -38,6 +38,7 @@ export class ApiService {
   }
 
   static async deleteTask(taskId) {
-    return this.request(`/tasks/${taskId}`, "PATCH")
+    return this.request(`/tasks/${taskId}`, "PATCH");
   }
+
 }
