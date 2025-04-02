@@ -103,7 +103,7 @@ const TopBar = ({ menuOpen, setMenuOpen }) => {
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
         >
-          {/* !!!если не авторизованным пользователям можно только на авторизацию то это надо менять!!! */}
+          {/* если не авторизованным пользователям можно только на авторизацию то это надо менять */}
           <MenuItem onClick={handleProfileClick}>
             {isAuthenticated ? 'Профиль' : 'Войти'}
           </MenuItem>

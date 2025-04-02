@@ -55,7 +55,7 @@ const KanbanBoard = () => {
 
   // Функция для поиска колонки по ID задачи
   const findColumn = (taskId) => {
-    return columns.find(col => 
+    return columns.find(col =>
       col.tasks.some(task => task.id === taskId)
     )?.id;
   };
@@ -67,19 +67,18 @@ const KanbanBoard = () => {
       .find(task => task.id === active.id));
   };
 
-  // Обработчик перемещения над колонкой
   const handleDragOver = ({ active, over }) => {
     if (!over) return;
 
     const activeId = active.id;
     const overId = over.id;
     const activeCol = findColumn(activeId);
-    const overCol = findColumn(overId) || over.id; // Фикс для пустых колонок
+    const overCol = findColumn(overId) || over.id;
 
     if (!activeCol || !overCol) return;
 
     if (activeCol !== overCol) {
-      setColumns(prev => 
+      setColumns(prev =>
         prev.map(col => {
           if (col.id === activeCol) {
             return {
@@ -103,28 +102,28 @@ const KanbanBoard = () => {
   const handleDragEnd = async ({ active, over }) => {
     if (!over) return;
     console.log(active, over);
-  
+
     const taskId = active.id;
     const newStatus = over.id;
     const task = columns
       .flatMap(col => col.tasks)
       .find(task => task.id === taskId);
-  
+
     // Оптимистичное обновление
     const originalColumns = [...columns];
     const updatedColumns = columns.map(col => ({
       ...col,
       tasks: col.tasks.filter(t => t.id !== taskId)
     }));
-    
+
     const column = updatedColumns.find(col => col.id === newStatus);
 
     if (column) {
       column.tasks.push(task);
     }
-    
+
     setColumns(updatedColumns);
-  
+
     try {
       await ApiService.updateTask(taskId, { status: newStatus });
     } catch (err) {
@@ -141,9 +140,9 @@ const KanbanBoard = () => {
       onDragOver={handleDragOver}
       onDragEnd={handleDragEnd}
     >
-      <div style={{ 
-        display: 'flex', 
-        gap: '16px', 
+      <div style={{
+        display: 'flex',
+        gap: '16px',
         padding: '20px',
         overflowX: 'auto'
       }}>
@@ -152,8 +151,8 @@ const KanbanBoard = () => {
             key={column.id}
             id={column.id}
             title={
-              <div style={{ 
-                padding: '8px', 
+              <div style={{
+                padding: '8px',
                 minHeight: '60px',
                 backgroundColor: '#fff',
                 borderRadius: '8px'
@@ -163,7 +162,7 @@ const KanbanBoard = () => {
               </div>
             }
           >
-            <SortableContext 
+            <SortableContext
               items={column.tasks}
               strategy={verticalListSortingStrategy}
             >
@@ -171,7 +170,7 @@ const KanbanBoard = () => {
                 <Task key={task.id} id={task.id}>
                   <Card
                     size="small"
-                    style={{ 
+                    style={{
                       marginBottom: '8px',
                       cursor: 'grab',
                       userSelect: 'none'
@@ -190,7 +189,7 @@ const KanbanBoard = () => {
               ))}
               {/* Плейсхолдер для пустых колонок */}
               {column.tasks.length === 0 && (
-                <div style={{ 
+                <div style={{
                   minHeight: '100px',
                   border: '2px dashed #e8e8e8',
                   borderRadius: '8px'
