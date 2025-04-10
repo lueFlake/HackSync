@@ -1,5 +1,6 @@
 package com.example
 
+import com.hacksync.general.configureRouting
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*

@@ -1,11 +1,10 @@
 package com.hacksync.general.services
 
 import com.hacksync.general.commands.*
-import com.hacksync.general.entities.Role
 import com.hacksync.general.entities.User
+import com.hacksync.general.exceptions.ValidationException
 import com.hacksync.general.repositories.JdbiUserRepository
 import com.hacksync.general.utils.PasswordHashing
-import org.jdbi.v3.sqlobject.customizer.Bind
 import java.util.*
 
 class UserService(private val userRepository: JdbiUserRepository) {
@@ -32,13 +31,16 @@ class UserService(private val userRepository: JdbiUserRepository) {
     }
 
     suspend fun changePassword(command: ChangePasswordCommand) {
+        val user = userRepository.getById(command.id)!!
+        if (!PasswordHashing.verify(command.oldPassword, user.passwordHash))
+            throw ValidationException("Password is incorrect")
         userRepository.updatePassword(
             command.id,
-            PasswordHashing.hash(command.password)
+            PasswordHashing.hash(command.newPassword)
         )
     }
 
-    fun getAll(): List<User> {
+    suspend fun getAll(): List<User> {
         return userRepository.getAll()
     }
 }

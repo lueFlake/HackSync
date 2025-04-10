@@ -9,7 +9,7 @@ import java.util.*
 data class User(@Contextual
                 override val id: UUID,
                 val email: String,
-                val passwordHash: String ?= null,
+                val passwordHash: String,
                 val role: Role,
                 val name: String,
                 val avatarUrl: String ?= null,

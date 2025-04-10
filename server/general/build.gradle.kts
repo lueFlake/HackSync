@@ -17,8 +17,10 @@ application {
 
 repositories {
     mavenCentral()
+    gradlePluginPortal()
     maven { url = uri("https://packages.confluent.io/maven/") }
     maven { url = uri("https://jitpack.io") }
+    maven { url = uri("https://plugins.gradle.org/m2/") }
 }
 
 dependencies {
@@ -26,7 +28,6 @@ dependencies {
     implementation(libs.ktor.server.core)
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.swagger)
-    implementation("io.ktor:ktor-server-swagger:3.0.1")
     implementation(libs.ktor.server.openapi)
     implementation(libs.ktor.simple.cache)
     implementation(libs.ktor.simple.redis.cache)
