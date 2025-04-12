@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -12,22 +12,24 @@ import MenuIcon from '@mui/icons-material/Menu';
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import { Divider } from 'antd';
 import { useNavigate } from 'react-router-dom';
-import AuthService from '../services/AuthService';
+import { useAuth } from '../contexts/AuthContext'; // Используем контекст вместо AuthService
 
 const TopBar = ({ menuOpen, setMenuOpen }) => {
   const [anchorEl, setAnchorEl] = useState(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(AuthService.isAuthenticated());
+  const { isAuthenticated, logout, checkAuth } = useAuth(); // Получаем из контекста
   const navigate = useNavigate();
+
+  // Проверяем аутентификацию при монтировании и при изменении
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
 
   const handleMenuToggle = () => {
     setMenuOpen(!menuOpen);
   };
 
-  const updateAuthStatus = () => {
-    setIsAuthenticated(AuthService.isAuthenticated());
-  };
-
   const handleProfileClick = () => {
+    setAnchorEl(null); // Закрываем меню
     if (isAuthenticated) {
       navigate('/profile');
     } else {
@@ -35,10 +37,14 @@ const TopBar = ({ menuOpen, setMenuOpen }) => {
     }
   };
 
-  const handleLogout = () => {
-    AuthService.logout();
-    updateAuthStatus();
-    navigate('/login');
+  const handleLogout = async () => {
+    setAnchorEl(null); // Закрываем меню
+    try {
+      await logout(); // Используем метод из контекста
+      navigate('/login', { state: { from: 'logout' } });
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
 
   return (
@@ -48,62 +54,70 @@ const TopBar = ({ menuOpen, setMenuOpen }) => {
         backgroundColor: '#414141',
         zIndex: (theme) => theme.zIndex.drawer + 1,
         height: 64,
-        position: 'fixed',
         top: 0,
         left: 0,
         right: 0
       }}
     >
       <Toolbar>
-        {/* Кнопка бургер-меню */}
         <IconButton
           color="inherit"
           edge="start"
           onClick={handleMenuToggle}
           sx={{ mr: 2 }}
+          aria-label="menu"
         >
           <MenuIcon />
         </IconButton>
 
-        {/* Логотип и название */}
         <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1 }}>
           <Box
             component="img"
             src="/icons/HackSync.png"
-            alt="Лого"
+            alt="Логотип HackSync"
             sx={{
               height: 60,
               width: 60,
-              mr: 2
+              mr: 2,
+              cursor: 'pointer'
             }}
+            onClick={() => navigate('/')}
           />
           <Typography
             variant="h5"
             sx={{
               fontWeight: 'bold',
               color: 'white',
-              textTransform: 'uppercase'
+              textTransform: 'uppercase',
+              cursor: 'pointer'
             }}
+            onClick={() => navigate('/')}
           >
             HackSync
           </Typography>
         </Box>
 
-        {/* Иконка пользователя */}
         <IconButton
           color="inherit"
           onClick={(e) => setAnchorEl(e.currentTarget)}
+          aria-label="account"
         >
           <AccountCircle fontSize="large" />
         </IconButton>
 
-        {/* Выпадающее меню пользователя */}
         <Menu
           anchorEl={anchorEl}
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
+          anchorOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
+          transformOrigin={{
+            vertical: 'top',
+            horizontal: 'right',
+          }}
         >
-          {/* если не авторизованным пользователям можно только на авторизацию то это надо менять */}
           <MenuItem onClick={handleProfileClick}>
             {isAuthenticated ? 'Профиль' : 'Войти'}
           </MenuItem>

@@ -3,7 +3,7 @@ import { useRecoilState } from 'recoil';
 import { Button, Form, Input, DatePicker, Divider, notification } from 'antd';
 import EventsTable from '../components/EventsTable';
 import { eventsState } from '../state/events';
-import { ApiService } from '../services/api';
+import { ApiService } from '../services/ApiService';
 import PageContainer from '../components/PageContainer';
 import { Typography } from '@mui/material';
 
@@ -13,7 +13,7 @@ const EventsPage = () => {
   const [form] = Form.useForm();
 
   const handleCreateStart = () => setIsCreating(true);
-  
+
   const handleCancel = () => {
     form.resetFields();
     setIsCreating(false);
@@ -23,7 +23,7 @@ const EventsPage = () => {
     try {
       const values = await form.validateFields();
       const newEvent = await ApiService.createEvent(values);
-      
+
       setEvents([...events, newEvent]);
       notification.success({ message: 'Событие создано!' });
       handleCancel();
@@ -60,7 +60,7 @@ const EventsPage = () => {
       {isCreating && (
         <>
           <Divider orientation="left">Новое событие</Divider>
-          
+
           <Form
             form={form}
             layout="vertical"
@@ -79,16 +79,16 @@ const EventsPage = () => {
               label="Дата проведения"
               rules={[{ required: true, message: 'Укажите дату' }]}
             >
-              <DatePicker 
-                showTime 
-                style={{ width: '100%' }} 
+              <DatePicker
+                showTime
+                style={{ width: '100%' }}
                 format="DD.MM.YYYY HH:mm"
               />
             </Form.Item>
 
             <Form.Item>
-              <Button 
-                type="primary" 
+              <Button
+                type="primary"
                 onClick={handleSubmit}
               >
                 Сохранить

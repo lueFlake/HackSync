@@ -17,7 +17,7 @@ import { Container, Column, Task } from './Kanban/KanbanComponents';
 import { Card, Tag, Avatar } from 'antd';
 import { UserOutlined } from '@ant-design/icons';
 import { message } from 'antd';
-import { ApiService } from '../services/api';
+import { ApiService } from '../services/ApiService';
 
 const KanbanBoard = () => {
   const [columns, setColumns] = useState([

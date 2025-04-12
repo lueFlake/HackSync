@@ -1,5 +1,5 @@
 import { atom, selectorFamily, useRecoilState, useRecoilValue } from 'recoil';
-import { ApiService } from '../services/api';
+import { ApiService } from '../services/ApiService';
 
 // Атом для хранения списка событий
 export const eventsState = atom({
