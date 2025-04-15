@@ -3,9 +3,8 @@
 export class ApiService {
   static _isRefreshing = false;
   static _refreshQueue = [];
-  static _DEFAULT_TIMEOUT = 10000;
-  // пока везде поставлю _TMP_TIMEOUT
-  static _TMP_TIMEOUT = 100000;
+  static DEFAULT_TIMEOUT = 10000; // 10 seconds
+  static REFRESH_TIMEOUT = 30000; // 30 seconds for refresh requests
 
   /**
    * Базовый метод запроса с таймаутом
@@ -17,17 +16,22 @@ export class ApiService {
    */
   static async request(endpoint, method = "GET", body = null, retry = true, timeoutMs = null) {
     const controller = new AbortController();
-    // Таймауты учитываются при обработке 401 ошибки
-    const timeout = timeoutMs ?? this._DEFAULT_TIMEOUT;
+    const timeout = timeoutMs ?? this.DEFAULT_TIMEOUT;
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
+      const headers = {
+        "Content-Type": "application/json",
+      };
+
+      const accessToken = localStorage.getItem("accessToken");
+      if (accessToken) {
+        headers.Authorization = `Bearer ${accessToken}`;
+      }
+
       const response = await fetch(`/api${endpoint}`, {
         method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
+        headers,
         body: body ? JSON.stringify(body) : null,
         credentials: 'include',
         signal: controller.signal
@@ -36,14 +40,13 @@ export class ApiService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        // При получении 401, если это не запрос токена, необходимо обновить access token
         if (response.status === 401 && endpoint !== '/auth/refresh' && retry) {
           return this._handleUnauthorized(endpoint, method, body, timeoutMs);
         }
-        throw new Error(await this._parseError(response));
+        throw await this._parseError(response);
       }
 
-      return response.json();
+      return await response.json();
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
@@ -53,7 +56,8 @@ export class ApiService {
     }
   }
 
-  // Внутренние методы ================================================
+
+  // Внутренние методы -------------------------------------
 
   static async _handleUnauthorized(endpoint, method, body, timeoutMs) {
     if (this._isRefreshing) {
@@ -65,14 +69,20 @@ export class ApiService {
     this._isRefreshing = true;
 
     try {
-      const { accessToken } = await this.request('/auth/refresh', 'POST', null, false, timeoutMs);
+      const { accessToken } = await this.request(
+        '/auth/refresh',
+        'POST',
+        null,
+        false,
+        this.REFRESH_TIMEOUT
+      );
+
       localStorage.setItem("accessToken", accessToken);
       this._flushRefreshQueue();
       return this.request(endpoint, method, body, false, timeoutMs);
     } catch (error) {
       this._rejectRefreshQueue(error);
       localStorage.removeItem("accessToken");
-      window.location.href = '/login?reason=session_expired';
       throw error;
     } finally {
       this._isRefreshing = false;
@@ -92,9 +102,9 @@ export class ApiService {
   static async _parseError(response) {
     try {
       const errorData = await response.json();
-      return errorData.message || `HTTP error ${response.status}`;
+      return new Error(errorData.message || `HTTP error ${response.status}`);
     } catch {
-      return `HTTP error ${response.status}`;
+      return new Error(`HTTP error ${response.status}`);
     }
   }
 
@@ -135,6 +145,10 @@ export class ApiService {
   }
 
   // Auth ------------------------------------------------------------
+  static async register(userData, timeoutMs = this._TMP_TIMEOUT) {
+    return this.request("/auth/register", "POST", userData, false, timeoutMs);
+  }
+
   static async login(credentials, timeoutMs = this._TMP_TIMEOUT) {
     const data = await this.request("/auth/login", "POST", credentials, false, timeoutMs);
     localStorage.setItem("accessToken", data.accessToken);
