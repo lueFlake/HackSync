@@ -1,0 +1,16 @@
+[Unit]
+Description=HackSync Server
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=hacksync
+WorkingDirectory=/path/to/HackSync/server/general
+ExecStart=/path/to/HackSync/deploy/server/start.sh
+Restart=on-failure
+RestartSec=5
+Environment=JAVA_HOME=/usr/lib/jvm/java-21-openjdk
+Environment=JAVA_OPTS="-Xmx512m -Xms256m"
+
+[Install]
+WantedBy=multi-user.target 

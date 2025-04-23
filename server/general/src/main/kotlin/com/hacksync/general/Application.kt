@@ -1,6 +1,8 @@
 package com.hacksync.general
 
-import com.hacksync.general.plugins.configSwagger
+import com.hacksync.general.plugins.configureAuthentication
+import com.hacksync.general.plugins.configureDependencies
+import com.hacksync.general.plugins.configureSwagger
 import configureSerialization
 import io.ktor.server.application.*
 
@@ -15,8 +17,10 @@ fun Application.module() {
     configureSerialization()
     configureInjection()
     configureDatabases()
+    configureAuthentication()
     //configureMonitoring()
     //configureSecurity()
+    configureDependencies()
+    configureSwagger()
     configureRouting()
-    configSwagger()
 }

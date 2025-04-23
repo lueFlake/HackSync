@@ -26,9 +26,11 @@ repositories {
 dependencies {
     implementation(libs.openapigen)
     implementation(libs.ktor.server.core)
-    implementation(libs.ktor.server.cors)
+    implementation(libs.ktor.server.cors)/*
     implementation(libs.ktor.server.swagger)
-    implementation(libs.ktor.server.openapi)
+    implementation(libs.ktor.server.openapi)*/
+    implementation(libs.ktor.swagger.ui)
+    implementation(libs.ktor.openapi)
     implementation(libs.ktor.simple.cache)
     implementation(libs.ktor.simple.redis.cache)
     implementation(libs.ktor.server.rate.limiting)

@@ -1,0 +1,28 @@
+{
+    "kotlin.compiler.jvm.target": "21",
+    "kotlin.languageServer.enabled": true,
+    "kotlin.languageServer.path": "kotlin-language-server",
+    "java.configuration.updateBuildConfiguration": "automatic",
+    "java.jdt.ls.java.home": "${env:JAVA_HOME}",
+    "java.configuration.runtimes": [
+        {
+            "name": "JavaSE-21",
+            "path": "${env:JAVA_HOME}"
+        }
+    ],
+    "files.exclude": {
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true,
+        "**/Thumbs.db": true,
+        "**/build": true,
+        "**/.gradle": true,
+        "**/node_modules": true
+    },
+    "editor.formatOnSave": true,
+    "editor.codeActionsOnSave": {
+        "source.organizeImports": true
+    }
+} 

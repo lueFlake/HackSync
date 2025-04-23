@@ -1,0 +1,14 @@
+[Unit]
+Description=HackSync Client
+After=network.target
+
+[Service]
+Type=simple
+User=hacksync
+WorkingDirectory=/path/to/HackSync/client
+ExecStart=/path/to/HackSync/deploy/client/start.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target 

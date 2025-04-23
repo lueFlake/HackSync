@@ -6,6 +6,7 @@ ktor-version = "3.0.1"
 logback-version = "1.4.14"
 postgres-version = "42.7.4"
 jdbi-version = "3.37.1"
+ktor-swagger-ui-version = "5.0.1"
 
 [libraries]
 openapigen = { module = "com.github.papsign:Ktor-OpenAPI-Generator", version = "646f366" }
@@ -35,6 +36,8 @@ jdbi-core = { module = "org.jdbi:jdbi3-core", version.ref = "jdbi-version" }
 jdbi-kotlin = { module = "org.jdbi:jdbi3-kotlin", version.ref = "jdbi-version" }
 jdbi-postgres = { module = "org.jdbi:jdbi3-postgres", version.ref = "jdbi-version" }
 jdbi-sql = { module = "org.jdbi:jdbi3-sqlobject", version.ref = "jdbi-version"}
+ktor-swagger-ui = { module = "io.github.smiley4:ktor-swagger-ui", version.ref = "ktor-swagger-ui-version" }
+ktor-openapi = { module = "io.github.smiley4:ktor-openapi", version.ref = "ktor-swagger-ui-version" }
 [plugins]
 kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin-version" }
 ktor = { id = "io.ktor.plugin", version.ref = "ktor-version" }

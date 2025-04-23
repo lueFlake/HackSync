@@ -8,7 +8,9 @@ ktor:
       url: "jdbc:postgresql://127.0.0.1:5432/postgres"
       user: postgres
       password: mysecretpassword
-      passwordjwt: secret
-      domain: "https://jwt-provider-domain/"
-      audience: "jwt-audience"
-      realm: "ktor sample app"
+    jwt:
+      secret: "your-256-bit-secret-key-here-must-be-at-least-32-characters-long"
+      issuer: "https://localhost:8080"
+      audience: "hacksync-api"
+      realm: "hacksync-realm"
+      expiration: 86400

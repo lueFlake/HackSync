@@ -43,4 +43,8 @@ class UserService(private val userRepository: JdbiUserRepository) {
     suspend fun getAll(): List<User> {
         return userRepository.getAll()
     }
+
+    suspend fun getByEmail(command: ReadUserByEmailCommand): User {
+        return userRepository.getByEmail(command.email) ?: throw Exception("User not found")
+    }
 }

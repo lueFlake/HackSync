@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        
+
+        {
+            "type": "kotlin",
+            "name": "Run Ktor Application",
+            "request": "launch",
+            "mainClass": "com.hacksync.general.ApplicationKt",
+            "projectRoot": "${workspaceFolder}/server/general",
+            "env": {
+                "JAVA_OPTS": "-Dio.ktor.development=true"
+            },
+            "args": []
+        },
+        {
+            "type": "kotlin",
+            "name": "Debug Ktor Application",
+            "request": "launch",
+            "mainClass": "com.hacksync.general.ApplicationKt",
+            "projectRoot": "${workspaceFolder}/server/general",
+            "env": {
+                "JAVA_OPTS": "-Dio.ktor.development=true"
+            },
+            "args": [],
+            "debug": true
+        }
+    ]
+} 
