@@ -23,7 +23,7 @@ const LoginPage = () => {
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const location = useLocation();
-  const { login, register } = useAuth();
+  const { login, register, isAuthenticated } = useAuth();
   const [isLoginForm, setIsLoginForm] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -34,20 +34,28 @@ const LoginPage = () => {
 
     try {
       if (isLoginForm) {
-        await login(values);
-        // Перенаправляем на предыдущую страницу или на главную
-        const from = location.state?.from?.pathname || '/';
-        navigate(from, { replace: true });
+        // Для входа используем только email и password
+        await login({ email: values.email, password: values.password });
         message.success('Вход выполнен успешно');
       } else {
-        await register(values);
-        setIsLoginForm(true);
-        form.resetFields();
-        message.success('Регистрация прошла успешно. Теперь вы можете войти.');
+        // Для регистрации передаем name, email и password
+        await register({
+          name: values.name,
+          email: values.email,
+          password: values.password
+        });
+        message.success('Регистрация прошла успешно');
       }
+
+      // Перенаправляем на предыдущую страницу или на главную
+      const from = location.state?.from?.pathname || '/';
+      navigate(from, { replace: true });
     } catch (err) {
       console.error('Auth error:', err);
-      setError(err.response?.data?.message || err.message || 'Произошла ошибка');
+      setError(
+        err.response?.data?.message || err.message ||
+        (isLoginForm ? 'Ошибка входа' : 'Ошибка регистрации')
+      );
     } finally {
       setLoading(false);
     }

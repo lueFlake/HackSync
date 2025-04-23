@@ -1,34 +1,69 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AuthService from '../services/AuthService';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [authState, setAuthState] = useState({
+    isAuthenticated: false,
+    isLoading: true,
+    error: null
+  });
 
-  // Проверяем аутентификацию при монтировании
-  useEffect(() => {
-    checkAuth();
+  const checkAuth = useCallback(async () => {
+    try {
+      const isAuth = await AuthService.isAuthenticated();
+      setAuthState(prev => ({ ...prev, isAuthenticated: isAuth, isLoading: false }));
+      return isAuth;
+    } catch (error) {
+      setAuthState(prev => ({ ...prev, isLoading: false, error }));
+      return false;
+    }
   }, []);
 
+  useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  const register = async (userData) => {
+    try {
+      await AuthService.register(userData);
+    } catch (error) {
+      setAuthState(prev => ({ ...prev, error }));
+      throw error;
+    }
+  };
+
   const login = async (credentials) => {
-    await AuthService.login(credentials);
-    setIsAuthenticated(true);
+    try {
+      await AuthService.login(credentials);
+      setAuthState(prev => ({ ...prev, isAuthenticated: true, error: null }));
+    } catch (error) {
+      setAuthState(prev => ({ ...prev, error }));
+      throw error;
+    }
   };
 
   const logout = async () => {
-    await AuthService.logout();
-    setIsAuthenticated(false);
-  };
-
-  const checkAuth = () => {
-    const authStatus = AuthService.isAuthenticated();
-    setIsAuthenticated(authStatus);
-    return authStatus;
+    try {
+      await AuthService.logout();
+      setAuthState(prev => ({ ...prev, isAuthenticated: false, error: null }));
+    } catch (error) {
+      setAuthState(prev => ({ ...prev, error }));
+      throw error;
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, checkAuth }}>
+    <AuthContext.Provider
+      value={{
+        ...authState,
+        login,
+        logout,
+        register,
+        checkAuth
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

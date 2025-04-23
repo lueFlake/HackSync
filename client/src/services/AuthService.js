@@ -1,48 +1,58 @@
-// services/AuthService.js
 import ApiService from './ApiService';
 
 class AuthService {
-  /**
-   * Логин: сохраняет accessToken и устанавливает refreshToken в cookie
-   */
-  static async login(credentials) {
-    const response = await ApiService.post('/auth/login', credentials);
-    localStorage.setItem('accessToken', response.data.accessToken);
-    // Refresh token автоматически сохраняется в HttpOnly cookie сервером
-    return response.data;
+  static async register(userData) {
+    try {
+      return await ApiService.request("/auth/register", "POST", userData, false);
+    } catch (error) {
+      console.error("Registration failed:", error);
+      throw error;
+    }
   }
 
-  /**
-   * Обновление access token через refresh token
-   */
+  static async login(credentials) {
+    try {
+      const data = await ApiService.request("/auth/login", "POST", credentials, false);
+      localStorage.setItem("accessToken", data.accessToken);
+      return data;
+    } catch (error) {
+      console.error("Login failed:", error);
+      throw error;
+    }
+  }
+
   static async refreshToken() {
     try {
-      // Отправляем запрос с refresh token (автоматически подставляется из cookies)
-      const response = await ApiService.post('/auth/refresh-token');
-      
-      // Обновляем access token
-      localStorage.setItem('accessToken', response.data.accessToken);
-      return response.data.accessToken;
+      const { accessToken } = await ApiService.request(
+        "/auth/refresh",
+        "POST",
+        null,
+        false,
+        ApiService.REFRESH_TIMEOUT
+      );
+      localStorage.setItem("accessToken", accessToken);
+      return accessToken;
     } catch (error) {
       this.logout();
       throw error;
     }
   }
 
-  /**
-   * Выход: очищаем токены
-   */
-  static logout() {
-    localStorage.removeItem('accessToken');
-    // Удаляем refresh token через API (сервер очистит cookie)
-    return ApiService.post('/auth/logout');
+  static async logout() {
+    try {
+      await ApiService.request("/auth/logout", "POST", null, false);
+    } finally {
+      localStorage.removeItem("accessToken");
+    }
   }
 
-  /**
-   * Проверка наличия access token
-   */
-  static isAuthenticated() {
-    return !!localStorage.getItem('accessToken');
+  static async isAuthenticated() {
+    const token = localStorage.getItem("accessToken");
+    if (!token) return false;
+
+    // Optional: Add token validation logic here
+    // For example, check expiration if JWT
+    return true;
   }
 }
 
