@@ -12,12 +12,12 @@ import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.ext.inject
+import org.koin.ktor.plugin.scope
 
 fun Route.authRoutes() {
-    val authService: AuthService by inject()
-    val userService: UserService by inject()
     route("/auth") {
         post("/register") {
+            val authService = call.scope.get<AuthService>()
             val request = call.receive<RegisterRequest>()
             val user = authService.register(request)
             
@@ -33,6 +33,8 @@ fun Route.authRoutes() {
         }
 
         post("/login") {
+            val authService = call.scope.get<AuthService>()
+            val userService = call.scope.get<UserService>()
             val request = call.receive<LoginRequest>()
             val token = authService.login(request)
             val user = userService.getByEmail(ReadUserByEmailCommand(request.email))

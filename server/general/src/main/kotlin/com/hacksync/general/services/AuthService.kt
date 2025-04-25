@@ -14,13 +14,13 @@ import java.util.*
 
 class AuthService(
     private val userRepository: JdbiUserRepository,
-    private val config: ApplicationConfig
+    config: ApplicationConfig
 ) {
-    private val secret = config.property("jwt.secret").getString()
-    private val issuer = config.property("jwt.issuer").getString()
-    private val audience = config.property("jwt.audience").getString()
+    private val secret = config.property("ktor.jwt.secret").getString()
+    private val issuer = config.property("ktor.jwt.issuer").getString()
+    private val audience = config.property("ktor.jwt.audience").getString()
 
-    suspend fun register(request: RegisterRequest): User {
+    fun register(request: RegisterRequest): User {
         if (userRepository.getByEmail(request.email) != null) {
             throw Exception("User with this email already exists")
         }
