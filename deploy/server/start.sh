@@ -11,4 +11,4 @@ cd /home/dev/git/HackSync/server/general
 ./gradlew build
 
 # Start the server
-java -jar build/libs/hacksync-backend-0.0.1.jar
+java -jar build/libs/hacksync-backend-all.jar
