@@ -3,7 +3,7 @@ package com.hacksync.general.entities
 import java.time.LocalDate
 import java.util.UUID
 
-data class Navigation(
+data class Hackathon(
     val id: UUID,
     val description: String?,
     val dateOfRegister: LocalDate?,
