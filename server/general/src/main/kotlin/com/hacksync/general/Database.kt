@@ -38,7 +38,6 @@ fun Application.configureDatabases() {
     koin {
         modules(module {
             single { jdbi }
-            single<JdbiUserRepository> { get<Jdbi>().onDemand(JdbiUserRepository::class.java) }
         })
     }
 }

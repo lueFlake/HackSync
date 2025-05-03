@@ -3,6 +3,7 @@ package com.hacksync.general.repositories
 import com.hacksync.general.entities.User
 import com.hacksync.general.mapping.UserMapper
 import com.hacksync.general.repositories.interfaces.IEntityRepository
+import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper
 import org.jdbi.v3.sqlobject.customizer.Bind
 import org.jdbi.v3.sqlobject.customizer.BindBean
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys
@@ -11,17 +12,15 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate
 import org.jdbi.v3.sqlobject.statement.UseRowMapper
 import java.util.*
 
+@RegisterConstructorMapper(User::class)
 interface JdbiUserRepository {
 
-    @UseRowMapper(UserMapper::class)
     @SqlQuery("SELECT * FROM users")
     fun getAll(): List<User>
 
-    @UseRowMapper(UserMapper::class)
     @SqlQuery("SELECT * FROM users SKIP :skip LIMIT :limit")
     fun getAll(skip: Int, limit: Int): List<User>
 
-    @UseRowMapper(UserMapper::class)
     @SqlQuery("SELECT * FROM users WHERE id = :id")
     fun getById(@Bind("id") id: UUID): User?
 

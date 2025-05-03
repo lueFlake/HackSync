@@ -3,7 +3,7 @@ package com.hacksync.general.repositories
 import com.hacksync.general.entities.Task
 import com.hacksync.general.entities.User
 import com.hacksync.general.mapping.UserMapper
-import com.hacksync.general.repositories.interfaces.IEntityRepository
+import org.jdbi.v3.sqlobject.config.RegisterConstructorMapper
 import org.jdbi.v3.sqlobject.customizer.Bind
 import org.jdbi.v3.sqlobject.customizer.BindBean
 import org.jdbi.v3.sqlobject.statement.SqlQuery
@@ -11,8 +11,7 @@ import org.jdbi.v3.sqlobject.statement.SqlUpdate
 import org.jdbi.v3.sqlobject.statement.UseRowMapper
 import java.util.*
 
-
-// TODO
+@RegisterConstructorMapper(Task::class)
 interface JdbiTaskRepository  {
 
     @UseRowMapper(UserMapper::class)
