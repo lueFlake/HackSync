@@ -23,7 +23,7 @@ interface JdbiLinkRepository : LinkRepository {
     override suspend fun insert(@BindBean link: Link): Link
 
     @SqlUpdate("UPDATE link SET url = :url, title = :title, entity_id = :entityId, entity_type = :entityType WHERE id = :id")
-    override suspend fun update(@BindBean link: Link)
+    override suspend fun update(@BindBean link: Link): Unit
 
     @SqlUpdate("DELETE FROM link WHERE id = :id")
     override suspend fun delete(@Bind("id") id: UUID)

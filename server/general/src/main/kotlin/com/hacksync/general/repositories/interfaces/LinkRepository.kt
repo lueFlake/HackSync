@@ -7,6 +7,6 @@ interface LinkRepository {
     suspend fun getAll(): List<Link>
     suspend fun getById(id: UUID): Link?
     suspend fun insert(link: Link): Link
-    suspend fun update(link: Link)
+    suspend fun update(link: Link): Unit
     suspend fun delete(id: UUID)
 } 

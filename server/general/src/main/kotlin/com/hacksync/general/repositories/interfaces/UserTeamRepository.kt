@@ -9,4 +9,4 @@ interface UserTeamRepository {
     suspend fun insert(userTeam: UserTeam)
     suspend fun update(userTeam: UserTeam)
     suspend fun delete(userId: UUID, teamId: UUID)
-} 
+}
