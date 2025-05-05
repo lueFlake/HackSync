@@ -6,7 +6,7 @@ import java.util.UUID
 interface TeamRepository {
     suspend fun getAll(): List<Team>
     suspend fun getById(id: UUID): Team?
-    suspend fun insert(team: Team): Team
-    suspend fun update(team: Team)
-    suspend fun delete(id: UUID)
+    suspend fun insert(team: Team): Unit
+    suspend fun update(team: Team): Unit
+    suspend fun delete(id: UUID): Unit
 } 

@@ -16,19 +16,19 @@ class DeadlineService(
     
     suspend fun create(deadline: Deadline): Deadline {
         // First create the deadline
-        val createdDeadline = repo.insert(deadline)
+        repo.insert(deadline)
         
         // Generate and create a link for the deadline
         val link = Link(
             id = UUID.randomUUID(),
-            url = "/deadlines/${createdDeadline.id}",
-            title = "Deadline: ${createdDeadline.name ?: "Untitled"}",
-            entityId = createdDeadline.id,
+            url = "/deadlines/${deadline.id}",
+            title = "Deadline: ${deadline.name ?: "Untitled"}",
+            entityId = deadline.id,
             entityType = "deadline"
         )
         linkRepo.insert(link)
         
-        return createdDeadline
+        return deadline
     }
     
     suspend fun update(deadline: Deadline): Deadline {

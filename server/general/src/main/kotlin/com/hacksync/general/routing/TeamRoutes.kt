@@ -22,14 +22,15 @@ import io.github.smiley4.ktoropenapi.delete
 
 fun Route.teamRoutes() {
     route("/teams") {
-        val teamService by inject<TeamService>()
 
         get("", TeamDocs.getAllTeams) {
+            val teamService = call.scope.get<TeamService>()
             val teams = teamService.getAll()
             call.respond(HttpStatusCode.OK, teams)
         }
 
         get("/{id}", TeamDocs.getTeamById) {
+            val teamService = call.scope.get<TeamService>()
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
@@ -40,12 +41,14 @@ fun Route.teamRoutes() {
         }
 
         post("", TeamDocs.createTeam) {
+            val teamService = call.scope.get<TeamService>()
             val request = call.receive<TeamCreateRequest>()
             val createdTeam = teamService.create(request.team)
             call.respond(HttpStatusCode.Created, createdTeam)
         }
 
         put("/{id}", TeamDocs.updateTeam) {
+            val teamService = call.scope.get<TeamService>()
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@put call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
@@ -55,6 +58,7 @@ fun Route.teamRoutes() {
         }
 
         delete("/{id}", TeamDocs.deleteTeam) {
+            val teamService = call.scope.get<TeamService>()
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
@@ -63,6 +67,7 @@ fun Route.teamRoutes() {
         }
 
         post("/{teamId}/users/{userId}", TeamDocs.addUserToTeam) {
+            val teamService = call.scope.get<TeamService>()
             val teamId = UUID.fromString(call.parameters["teamId"])
                 ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid team ID format")
             val userId = UUID.fromString(call.parameters["userId"])
@@ -73,6 +78,7 @@ fun Route.teamRoutes() {
         }
 
         delete("/{teamId}/users/{userId}", TeamDocs.removeUserFromTeam) {
+            val teamService = call.scope.get<TeamService>()
             val teamId = UUID.fromString(call.parameters["teamId"])
                 ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid team ID format")
             val userId = UUID.fromString(call.parameters["userId"])
@@ -83,6 +89,7 @@ fun Route.teamRoutes() {
         }
 
         get("/{id}/members", TeamDocs.getTeamMembers) {
+            val teamService = call.scope.get<TeamService>()
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
@@ -91,6 +98,7 @@ fun Route.teamRoutes() {
         }
 
         get("/users/{id}", TeamDocs.getUserTeams) {
+            val teamService = call.scope.get<TeamService>()
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 

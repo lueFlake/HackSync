@@ -6,7 +6,7 @@ import java.util.UUID
 interface KanbanStatusRepository {
     suspend fun getAll(): List<KanbanStatus>
     suspend fun getById(id: UUID): KanbanStatus?
-    suspend fun insert(status: KanbanStatus): KanbanStatus
-    suspend fun update(status: KanbanStatus)
-    suspend fun delete(id: UUID)
+    suspend fun insert(status: KanbanStatus): Unit
+    suspend fun update(status: KanbanStatus): Unit
+    suspend fun delete(id: UUID): Unit
 } 

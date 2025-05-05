@@ -20,11 +20,11 @@ interface JdbiKanbanStatusRepository : KanbanStatusRepository {
 
     @SqlUpdate("INSERT INTO kanbanstatus (id, next_id, name, color) VALUES (:id, :nextId, :name, :color) RETURNING *")
     @GetGeneratedKeys
-    override suspend fun insert(@BindBean status: KanbanStatus): KanbanStatus
+    override suspend fun insert(@BindBean status: KanbanStatus): Unit
 
     @SqlUpdate("UPDATE kanbanstatus SET next_id = :nextId, name = :name, color = :color WHERE id = :id")
-    override suspend fun update(@BindBean status: KanbanStatus)
+    override suspend fun update(@BindBean status: KanbanStatus): Unit
 
     @SqlUpdate("DELETE FROM kanbanstatus WHERE id = :id")
-    override suspend fun delete(@Bind("id") id: UUID)
+    override suspend fun delete(@Bind("id") id: UUID): Unit
 } 

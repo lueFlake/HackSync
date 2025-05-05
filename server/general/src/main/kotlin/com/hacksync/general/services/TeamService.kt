@@ -19,19 +19,19 @@ class TeamService(
     
     suspend fun create(team: Team): Team {
         // First create the team
-        val createdTeam = repo.insert(team)
+        repo.insert(team)
         
         // Generate and create a link for the team
         val link = Link(
             id = UUID.randomUUID(),
-            url = "/teams/${createdTeam.id}",
-            title = "Team: ${createdTeam.name}",
-            entityId = createdTeam.id,
+            url = "/teams/${team.id}",
+            title = "Team: ${team.name}",
+            entityId = team.id,
             entityType = "team"
         )
         linkRepo.insert(link)
         
-        return createdTeam
+        return team
     }
     
     suspend fun update(team: Team): Team {

@@ -6,7 +6,7 @@ import java.util.UUID
 interface DeadlineRepository {
     suspend fun getAll(): List<Deadline>
     suspend fun getById(id: UUID): Deadline?
-    suspend fun insert(deadline: Deadline): Deadline
-    suspend fun update(deadline: Deadline)
-    suspend fun delete(id: UUID)
+    suspend fun insert(deadline: Deadline): Unit
+    suspend fun update(deadline: Deadline): Unit
+    suspend fun delete(id: UUID): Unit
 } 

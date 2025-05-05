@@ -6,7 +6,7 @@ import java.util.UUID
 interface LinkRepository {
     suspend fun getAll(): List<Link>
     suspend fun getById(id: UUID): Link?
-    suspend fun insert(link: Link): Link
+    suspend fun insert(link: Link): Unit
     suspend fun update(link: Link): Unit
-    suspend fun delete(id: UUID)
+    suspend fun delete(id: UUID): Unit
 } 

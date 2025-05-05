@@ -18,11 +18,11 @@ interface JdbiUserTeamRepository : UserTeamRepository {
     override suspend fun getById(@Bind("userId") userId: UUID, @Bind("teamId") teamId: UUID): UserTeam?
 
     @SqlUpdate("INSERT INTO userteam (user_id, team_id) VALUES (:userId, :teamId)")
-    override suspend fun insert(@BindBean userTeam: UserTeam)
+    override suspend fun insert(@BindBean userTeam: UserTeam): Unit
 
     @SqlUpdate("UPDATE userteam SET user_id = :userId, team_id = :teamId WHERE user_id = :userId AND team_id = :teamId")
-    override suspend fun update(@BindBean userTeam: UserTeam)
+    override suspend fun update(@BindBean userTeam: UserTeam): Unit
 
     @SqlUpdate("DELETE FROM userteam WHERE user_id = :userId AND team_id = :teamId")
-    override suspend fun delete(@Bind("userId") userId: UUID, @Bind("teamId") teamId: UUID)
+    override suspend fun delete(@Bind("userId") userId: UUID, @Bind("teamId") teamId: UUID): Unit
 } 

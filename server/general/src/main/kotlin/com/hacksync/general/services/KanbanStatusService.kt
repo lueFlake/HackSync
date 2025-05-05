@@ -16,19 +16,19 @@ class KanbanStatusService(
     
     suspend fun create(status: KanbanStatus): KanbanStatus {
         // First create the status
-        val createdStatus = repo.insert(status)
+        repo.insert(status)
         
         // Generate and create a link for the status
         val link = Link(
             id = UUID.randomUUID(),
-            url = "/kanban-statuses/${createdStatus.id}",
-            title = "Status: ${createdStatus.name}",
-            entityId = createdStatus.id,
+            url = "/kanban-statuses/${status.id}",
+            title = "Status: ${status.name}",
+            entityId = status.id,
             entityType = "kanban_status"
         )
         linkRepo.insert(link)
         
-        return createdStatus
+        return status
     }
     
     suspend fun update(status: KanbanStatus): KanbanStatus {

@@ -71,14 +71,12 @@ class UserService(
         )
     }
 
-    suspend fun getAll(): List<User> {
-        return userRepository.getAll()
-    }
+    suspend fun getAll(): List<User> = userRepository.getAll()
 
     suspend fun getByEmail(command: ReadUserByEmailCommand): User {
         return userRepository.getByEmail(command.email) ?: throw Exception("User not found")
     }
 
-    suspend fun getLink(userId: UUID): Link? = 
+    suspend fun getLink(userId: UUID): Link? =
         linkRepository.getAll().firstOrNull { it.entityId == userId }
 }
