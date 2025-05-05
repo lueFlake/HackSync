@@ -4,9 +4,9 @@ import com.hacksync.general.entities.Link
 import java.util.UUID
 
 interface LinkRepository {
-    suspend fun getAll(): List<Link>
-    suspend fun getById(id: UUID): Link?
-    suspend fun insert(link: Link): Unit
-    suspend fun update(link: Link): Unit
-    suspend fun delete(id: UUID): Unit
+    fun getAll(): List<Link>
+    fun getById(id: UUID): Link?
+    fun insert(link: Link)
+    fun update(link: Link)
+    fun delete(id: UUID)
 } 

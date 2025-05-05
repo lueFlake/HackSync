@@ -13,23 +13,20 @@ import java.util.UUID
 
 interface JdbiLinkRepository : LinkRepository {
     @UseRowMapper(LinkMapper::class)
-    @SqlQuery("SELECT * FROM link")
-    override suspend fun getAll(): List<Link>
+    @SqlQuery("SELECT * FROM links")
+    override fun getAll(): List<Link>
 
     @UseRowMapper(LinkMapper::class)
-    @SqlQuery("SELECT * FROM link WHERE id = :id")
-    override suspend fun getById(@Bind("id") id: UUID): Link?
+    @SqlQuery("SELECT * FROM links WHERE id = :id")
+    override fun getById(@Bind("id") id: UUID): Link?
 
-    @SqlUpdate("INSERT INTO link (id, url) VALUES (:id, :url) RETURNING *")
-    @GetGeneratedKeys
-    override suspend fun insert(@BindBean link: Link): Unit
+    @SqlUpdate("INSERT INTO links (id, url, title, entity_id, entity_type) VALUES (:id, :url, :title, :entityId, :entityType) RETURNING *")
+    override fun insert(@BindBean link: Link)
 
-    @SqlUpdate("UPDATE link SET url = :url WHERE id = :id")
-    @GetGeneratedKeys
-    override suspend fun update(@BindBean link: Link): Unit
+    @SqlUpdate("UPDATE links SET url = :url, title = :title, entity_id = :entityId, entity_type = :entityType WHERE id = :id")
+    override fun update(@BindBean link: Link)
 
-    @SqlUpdate("DELETE FROM link WHERE id = :id")
-    @GetGeneratedKeys
-    override suspend fun delete(@Bind("id") id: UUID): Unit
+    @SqlUpdate("DELETE FROM links WHERE id = :id")
+    override fun delete(@Bind("id") id: UUID)
 }
 

@@ -4,9 +4,9 @@ import com.hacksync.general.entities.Hackathon
 import java.util.UUID
 
 interface HackathonRepository {
-    suspend fun getAll(): List<Hackathon>
-    suspend fun getById(id: UUID): Hackathon?
-    suspend fun insert(hackathon: Hackathon)
-    suspend fun update(hackathon: Hackathon): Unit
-    suspend fun delete(id: UUID)
-} 
+    fun getAll(): List<Hackathon>
+    fun getById(id: UUID): Hackathon?
+    fun insert(hackathon: Hackathon)
+    fun update(hackathon: Hackathon): Unit
+    fun delete(id: UUID)
+}

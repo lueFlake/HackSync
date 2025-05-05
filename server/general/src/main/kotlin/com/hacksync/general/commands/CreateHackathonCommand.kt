@@ -26,4 +26,4 @@ data class CreateHackathonCommand(
             linkId = null
         )
     }
-} 
+}

@@ -14,19 +14,18 @@ import java.util.UUID
 interface JdbiHackathonRepository : HackathonRepository {
     @UseRowMapper(HackathonMapper::class)
     @SqlQuery("SELECT * FROM hackathons")
-    override suspend fun getAll(): List<Hackathon>
+    override fun getAll(): List<Hackathon>
 
     @UseRowMapper(HackathonMapper::class)
     @SqlQuery("SELECT * FROM hackathons WHERE id = :id")
-    override suspend fun getById(@Bind("id") id: UUID): Hackathon?
+    override fun getById(@Bind("id") id: UUID): Hackathon?
 
     @SqlUpdate("INSERT INTO hackathons (id, name, description, date_of_register, date_of_start, date_of_end, extra_destfine) VALUES (:id, :name, :description, :dateOfRegister, :dateOfStart, :dateOfEnd, :extraDestfine)")
-    override suspend fun insert(@BindBean hackathon: Hackathon)
+    override fun insert(@BindBean hackathon: Hackathon)
 
     @SqlUpdate("UPDATE hackathons SET name = :name, description = :description, date_of_register = :dateOfRegister, date_of_start = :dateOfStart, date_of_end = :dateOfEnd, extra_destfine = :extraDestfine WHERE id = :id")
-    @GetGeneratedKeys
-    override suspend fun update(@BindBean hackathon: Hackathon): Unit
+    override fun update(@BindBean hackathon: Hackathon)
 
     @SqlUpdate("DELETE FROM hackathons WHERE id = :id")
-    override suspend fun delete(@Bind("id") id: UUID)
+    override fun delete(@Bind("id") id: UUID)
 } 

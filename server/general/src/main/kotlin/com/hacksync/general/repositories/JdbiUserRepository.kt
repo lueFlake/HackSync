@@ -37,7 +37,7 @@ interface JdbiUserRepository {
         updated_at = NOW()
         WHERE id = :id
     """)
-    fun update(@BindBean entity: User): Unit
+    fun update(@BindBean entity: User)
 
     @SqlUpdate("""
         UPDATE users SET

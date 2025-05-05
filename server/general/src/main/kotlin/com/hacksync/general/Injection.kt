@@ -1,6 +1,7 @@
 package com.hacksync.general
 
 import com.hacksync.general.repositories.*
+import com.hacksync.general.repositories.interfaces.HackathonRepository
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import org.koin.core.module.dsl.scopedOf
@@ -35,7 +36,7 @@ fun Application.configureInjection() {
             single<JdbiUserRepository> { get<Jdbi>().onDemand(JdbiUserRepository::class.java) }
             single<JdbiKanbanStatusRepository> { get<Jdbi>().onDemand(JdbiKanbanStatusRepository::class.java) }
             single<JdbiUserTeamRepository> { get<Jdbi>().onDemand(JdbiUserTeamRepository::class.java) }
-            single<JdbiHackathonRepository> { get<Jdbi>().onDemand(JdbiHackathonRepository::class.java) }
+            single<HackathonRepository> { get<Jdbi>().onDemand(JdbiHackathonRepository::class.java) }
             single<JdbiDeadlineRepository> { get<Jdbi>().onDemand(JdbiDeadlineRepository::class.java) }
             single<JdbiTeamRepository> { get<Jdbi>().onDemand(JdbiTeamRepository::class.java) }
             single<JdbiLinkRepository> { get<Jdbi>().onDemand(JdbiLinkRepository::class.java) }

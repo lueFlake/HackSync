@@ -5,10 +5,11 @@ import com.hacksync.general.entities.Hackathon
 import com.hacksync.general.entities.Link
 import com.hacksync.general.repositories.JdbiHackathonRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
+import com.hacksync.general.repositories.interfaces.HackathonRepository
 import java.util.*
 
 class HackathonService(
-    private val hackathonRepository: JdbiHackathonRepository,
+    private val hackathonRepository: HackathonRepository,
     private val linkRepository: JdbiLinkRepository
 ) {
     suspend fun read(command: ReadHackathonCommand): Hackathon {
