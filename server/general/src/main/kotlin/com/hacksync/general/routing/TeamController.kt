@@ -1,18 +1,12 @@
 package com.hacksync.general.routing
 
-import com.hacksync.general.entities.Team
-import com.hacksync.general.entities.Link
-import com.hacksync.general.models.TeamCreateRequest
-import com.hacksync.general.models.TeamResponse
+import com.hacksync.general.commands.team.*
 import com.hacksync.general.services.TeamService
 import com.hacksync.general.docs.TeamDocs
-import com.hacksync.general.utils.jsonBody
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import org.koin.ktor.ext.inject
 import org.koin.ktor.plugin.scope
 import java.util.UUID
 import io.github.smiley4.ktoropenapi.get
@@ -26,7 +20,7 @@ fun Route.teamRoutes() {
         get("", TeamDocs.getAllTeams) {
             val teamService = call.scope.get<TeamService>()
             val teams = teamService.getAll()
-            call.respond(HttpStatusCode.OK, teams)
+            call.respond(HttpStatusCode.OK, teams.map { it.toDto() })
         }
 
         get("/{id}", TeamDocs.getTeamById) {
@@ -34,17 +28,17 @@ fun Route.teamRoutes() {
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
-            val team = teamService.getById(id)
+            val team = teamService.read(ReadTeamCommand(id))
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Team not found")
 
-            call.respond(HttpStatusCode.OK, team)
+            call.respond(HttpStatusCode.OK, team.toDto())
         }
 
         post("", TeamDocs.createTeam) {
             val teamService = call.scope.get<TeamService>()
-            val request = call.receive<TeamCreateRequest>()
-            val createdTeam = teamService.create(request.team)
-            call.respond(HttpStatusCode.Created, createdTeam)
+            val command = call.receive<CreateTeamCommand>()
+            val createdTeam = teamService.create(command)
+            call.respond(HttpStatusCode.Created, createdTeam.toDto())
         }
 
         put("/{id}", TeamDocs.updateTeam) {
@@ -52,9 +46,9 @@ fun Route.teamRoutes() {
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@put call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
-            val request = call.receive<TeamCreateRequest>()
-            val updatedTeam = teamService.update(request.team)
-            call.respond(HttpStatusCode.OK, updatedTeam)
+            val command = call.receive<UpdateTeamCommand>()
+            val updatedTeam = teamService.update(command)
+            call.respond(HttpStatusCode.OK, updatedTeam.toDto())
         }
 
         delete("/{id}", TeamDocs.deleteTeam) {
@@ -62,7 +56,7 @@ fun Route.teamRoutes() {
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
-            teamService.delete(id)
+            teamService.delete(DeleteTeamCommand(id))
             call.respond(HttpStatusCode.NoContent)
         }
 
@@ -73,7 +67,7 @@ fun Route.teamRoutes() {
             val userId = UUID.fromString(call.parameters["userId"])
                 ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid user ID format")
 
-            teamService.addUser(teamId, userId)
+            teamService.addUser(AddUserToTeamCommand(teamId, userId))
             call.respond(HttpStatusCode.OK)
         }
 
@@ -84,7 +78,7 @@ fun Route.teamRoutes() {
             val userId = UUID.fromString(call.parameters["userId"])
                 ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid user ID format")
 
-            teamService.removeUser(teamId, userId)
+            teamService.removeUser(RemoveUserFromTeamCommand(teamId, userId))
             call.respond(HttpStatusCode.OK)
         }
 
@@ -93,7 +87,7 @@ fun Route.teamRoutes() {
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
-            val members = teamService.getTeamMembers(id)
+            val members = teamService.getTeamMembers(GetTeamMembersCommand(id))
             call.respond(HttpStatusCode.OK, members)
         }
 
@@ -102,7 +96,7 @@ fun Route.teamRoutes() {
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
-            val teams = teamService.getUserTeams(id)
+            val teams = teamService.getUserTeams(GetUserTeamsCommand(id))
             call.respond(HttpStatusCode.OK, teams)
         }
     }

@@ -1,9 +1,11 @@
 package com.hacksync.general.services
 
-import com.hacksync.general.commands.*
+import com.hacksync.general.commands.hackathon.CreateHackathonCommand
+import com.hacksync.general.commands.hackathon.DeleteHackathonCommand
+import com.hacksync.general.commands.hackathon.ReadHackathonCommand
+import com.hacksync.general.commands.hackathon.UpdateHackathonCommand
 import com.hacksync.general.entities.Hackathon
 import com.hacksync.general.entities.Link
-import com.hacksync.general.repositories.JdbiHackathonRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
 import com.hacksync.general.repositories.interfaces.HackathonRepository
 import java.util.*

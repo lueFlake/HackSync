@@ -4,6 +4,7 @@ import com.hacksync.general.entities.KanbanStatus
 import com.hacksync.general.entities.Link
 import com.hacksync.general.repositories.JdbiKanbanStatusRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
+import java.time.Instant
 import java.util.UUID
 
 class KanbanStatusService(
@@ -15,8 +16,14 @@ class KanbanStatusService(
     suspend fun getById(id: UUID): KanbanStatus? = repo.getById(id)
     
     suspend fun create(status: KanbanStatus): KanbanStatus {
+        val now = Instant.now()
+        val statusWithTimestamps = status.copy(
+            createdAt = now,
+            updatedAt = now
+        )
+        
         // First create the status
-        repo.insert(status)
+        repo.insert(statusWithTimestamps)
         
         // Generate and create a link for the status
         val link = Link(
@@ -28,11 +35,14 @@ class KanbanStatusService(
         )
         linkRepo.insert(link)
         
-        return status
+        return statusWithTimestamps
     }
     
     suspend fun update(status: KanbanStatus): KanbanStatus {
-        repo.update(status)
+        val statusWithUpdatedTimestamp = status.copy(
+            updatedAt = Instant.now()
+        )
+        repo.update(statusWithUpdatedTimestamp)
         
         // Update the existing link or create a new one if it doesn't exist
         val existingLink = getLink(status.id)
@@ -50,7 +60,7 @@ class KanbanStatusService(
             linkRepo.update(link)
         }
         
-        return status
+        return statusWithUpdatedTimestamp
     }
     
     suspend fun delete(id: UUID) {

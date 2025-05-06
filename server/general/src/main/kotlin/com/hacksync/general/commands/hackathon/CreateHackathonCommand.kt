@@ -1,4 +1,4 @@
-package com.hacksync.general.commands
+package com.hacksync.general.commands.hackathon
 
 import com.hacksync.general.entities.Hackathon
 import kotlinx.serialization.Serializable
@@ -23,7 +23,8 @@ data class CreateHackathonCommand(
             dateOfStart = Instant.parse(this.dateOfStart),
             dateOfEnd = Instant.parse(this.dateOfEnd),
             extraDestfine = this.extraDestfine,
-            linkId = null
+            createdAt = Instant.now(),
+            updatedAt = Instant.now()
         )
     }
 }

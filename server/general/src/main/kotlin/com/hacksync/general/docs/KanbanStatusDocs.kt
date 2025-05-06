@@ -1,10 +1,12 @@
 package com.hacksync.general.docs
 
+import com.hacksync.general.commands.status.CreateKanbanStatusCommand
+import com.hacksync.general.commands.status.UpdateKanbanStatusCommand
 import com.hacksync.general.entities.KanbanStatus
-import com.hacksync.general.models.KanbanStatusCreateRequest
 import com.hacksync.general.utils.jsonBody
 import io.github.smiley4.ktoropenapi.config.RouteConfig
 import io.ktor.http.*
+import java.time.Instant
 import java.util.*
 
 object KanbanStatusDocs {
@@ -17,6 +19,29 @@ object KanbanStatusDocs {
         response {
             HttpStatusCode.OK to {
                 description = "List of Kanban statuses retrieved successfully"
+                jsonBody<List<KanbanStatus>> {
+                    example("All Kanban Statuses") {
+                        value = listOf(
+                            KanbanStatus(
+                                id = UUID.randomUUID(),
+                                nextId = null,
+                                name = "To Do",
+                                color = "#FF0000",
+                                createdAt = Instant.now(),
+                                updatedAt = Instant.now()
+                            ),
+                            KanbanStatus(
+                                id = UUID.randomUUID(),
+                                nextId = null,
+                                name = "In Progress",
+                                color = "#FFA500",
+                                createdAt = Instant.now(),
+                                updatedAt = Instant.now()
+                            )
+                        )
+                        description = "Example of all Kanban statuses in the system"
+                    }
+                }
             }
         }
     }
@@ -30,9 +55,25 @@ object KanbanStatusDocs {
         response {
             HttpStatusCode.OK to {
                 description = "Kanban status retrieved successfully"
+                jsonBody<KanbanStatus> {
+                    example("Single Kanban Status") {
+                        value = KanbanStatus(
+                            id = UUID.randomUUID(),
+                            nextId = null,
+                            name = "In Progress",
+                            color = "#FFA500",
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
+                        description = "Example of a single Kanban status"
+                    }
+                }
             }
             HttpStatusCode.NotFound to {
                 description = "Kanban status not found"
+            }
+            HttpStatusCode.BadRequest to {
+                description = "Invalid ID format"
             }
         }
     }
@@ -44,9 +85,9 @@ object KanbanStatusDocs {
         tags = listOf("Kanban")
 
         request {
-            jsonBody<KanbanStatusCreateRequest> {
+            jsonBody<CreateKanbanStatusCommand> {
                 example("Create Kanban Status") {
-                    value = KanbanStatusCreateRequest(
+                    value = CreateKanbanStatusCommand(
                         name = "In Progress",
                         color = "#FFA500",
                         nextId = null
@@ -59,6 +100,19 @@ object KanbanStatusDocs {
         response {
             HttpStatusCode.Created to {
                 description = "Kanban status created successfully"
+                jsonBody<KanbanStatus> {
+                    example("Created Kanban Status") {
+                        value = KanbanStatus(
+                            id = UUID.randomUUID(),
+                            nextId = null,
+                            name = "In Progress",
+                            color = "#FFA500",
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
+                        description = "Example of a created Kanban status"
+                    }
+                }
             }
             HttpStatusCode.BadRequest to {
                 description = "Invalid input data"
@@ -73,14 +127,15 @@ object KanbanStatusDocs {
         tags = listOf("Kanban")
 
         request {
-            jsonBody<KanbanStatusCreateRequest> {
+            jsonBody<UpdateKanbanStatusCommand> {
                 example("Update Kanban Status") {
-                    value = KanbanStatusCreateRequest(
+                    value = UpdateKanbanStatusCommand(
+                        id = UUID.randomUUID(),
                         name = "Updated Status",
                         color = "#00FF00",
                         nextId = null
                     )
-                    description = "Update an existing Kanban status"
+                    description = "Update an existing Kanban status with optional fields"
                 }
             }
         }
@@ -88,9 +143,22 @@ object KanbanStatusDocs {
         response {
             HttpStatusCode.OK to {
                 description = "Kanban status updated successfully"
+                jsonBody<KanbanStatus> {
+                    example("Updated Kanban Status") {
+                        value = KanbanStatus(
+                            id = UUID.randomUUID(),
+                            nextId = null,
+                            name = "Updated Status",
+                            color = "#00FF00",
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
+                        description = "Example of an updated Kanban status"
+                    }
+                }
             }
             HttpStatusCode.BadRequest to {
-                description = "Invalid input data"
+                description = "Invalid input data or ID mismatch"
             }
             HttpStatusCode.NotFound to {
                 description = "Kanban status not found"
@@ -110,6 +178,9 @@ object KanbanStatusDocs {
             }
             HttpStatusCode.NotFound to {
                 description = "Kanban status not found"
+            }
+            HttpStatusCode.BadRequest to {
+                description = "Invalid ID format"
             }
         }
     }

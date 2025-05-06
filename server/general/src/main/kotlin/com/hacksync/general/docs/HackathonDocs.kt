@@ -1,23 +1,97 @@
 package com.hacksync.general.docs
 
-import com.hacksync.general.commands.*
+import com.hacksync.general.commands.hackathon.CreateHackathonCommand
+import com.hacksync.general.commands.hackathon.UpdateHackathonCommand
+import com.hacksync.general.dto.HackathonDto
 import com.hacksync.general.entities.Hackathon
-import com.hacksync.general.models.HackathonCreateRequest
 import com.hacksync.general.utils.jsonBody
+import com.hacksync.general.utils.standardListQueryParameters
 import io.github.smiley4.ktoropenapi.config.RouteConfig
 import io.ktor.http.*
-import java.time.Duration
 import java.time.Instant
-import java.time.LocalDate
-import java.time.temporal.ChronoUnit
-import java.time.temporal.TemporalAmount
 import java.util.*
 
 object HackathonDocs {
-    val postHackathon: RouteConfig.() -> Unit = {
-        operationId = "postHackathon"
-        summary = "Create a new hackathon"
-        description = "Creates a new hackathon and returns its ID. Dates should be in ISO-8601 format (e.g., 2024-03-20T10:00:00Z)"
+    val getAllHackathons: RouteConfig.() -> Unit = {
+        operationId = "getAllHackathons"
+        summary = "Get all hackathons"
+        description = "Retrieves a list of all hackathons"
+        tags = listOf("Hackathons")
+
+        request {
+            standardListQueryParameters()
+        }
+
+        response {
+            HttpStatusCode.OK to {
+                description = "List of hackathons retrieved successfully"
+                jsonBody<List<HackathonDto>> {
+                    example("All Hackathons") {
+                        value = listOf(
+                            HackathonDto(
+                                id = UUID.randomUUID(),
+                                description = "Annual coding competition",
+                                dateOfRegister = Instant.now(),
+                                dateOfStart = Instant.now().plusSeconds(86400),
+                                dateOfEnd = Instant.now().plusSeconds(259200),
+                                extraDestfine = "Additional information",
+                                name = "Hackathon 2024",
+                                createdAt = Instant.now(),
+                                updatedAt = Instant.now()
+                            )
+                        )
+                        description = "Example of all hackathons in the system"
+                    }
+                }
+            }
+        }
+    }
+
+    val getHackathonById: RouteConfig.() -> Unit = {
+        operationId = "getHackathonById"
+        summary = "Get hackathon by ID"
+        description = "Retrieves a specific hackathon by its ID"
+        tags = listOf("Hackathons")
+
+        request {
+            pathParameter<UUID>("id") {
+                description = "The ID of the hackathon to retrieve"
+            }
+        }
+
+        response {
+            HttpStatusCode.OK to {
+                description = "Hackathon retrieved successfully"
+                jsonBody<Hackathon> {
+                    example("Single Hackathon") {
+                        value = Hackathon(
+                            id = UUID.randomUUID(),
+                            description = "Annual coding competition",
+                            dateOfRegister = Instant.now(),
+                            dateOfStart = Instant.now().plusSeconds(86400),
+                            dateOfEnd = Instant.now().plusSeconds(259200),
+                            extraDestfine = "Additional information",
+                            name = "Hackathon 2024",
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
+                        description = "Example of a single hackathon"
+                    }
+                }
+            }
+            HttpStatusCode.NotFound to {
+                description = "Hackathon not found"
+            }
+            HttpStatusCode.BadRequest to {
+                description = "Invalid ID format"
+            }
+        }
+    }
+
+    val createHackathon: RouteConfig.() -> Unit = {
+        operationId = "createHackathon"
+        summary = "Create new hackathon"
+        description = "Creates a new hackathon"
         tags = listOf("Hackathons")
 
         request {
@@ -26,12 +100,12 @@ object HackathonDocs {
                     value = CreateHackathonCommand(
                         name = "Hackathon 2024",
                         description = "Annual coding competition",
-                        dateOfRegister = "2024-03-20T10:00:00Z",
-                        dateOfStart = "2024-04-01T09:00:00Z",
-                        dateOfEnd = "2024-04-03T18:00:00Z",
-                        extraDestfine = "Additional information about the hackathon"
+                        dateOfRegister = Instant.now().toString(),
+                        dateOfStart = Instant.now().plusSeconds(86400).toString(),
+                        dateOfEnd = Instant.now().plusSeconds(259200).toString(),
+                        extraDestfine = "Additional information"
                     )
-                    description = "Create a new hackathon with name, description, and dates in ISO-8601 format"
+                    description = "Create a new hackathon with all required fields"
                 }
             }
         }
@@ -39,64 +113,51 @@ object HackathonDocs {
         response {
             HttpStatusCode.Created to {
                 description = "Hackathon created successfully"
+                jsonBody<Hackathon> {
+                    example("Created Hackathon") {
+                        value = Hackathon(
+                            id = UUID.randomUUID(),
+                            description = "Annual coding competition",
+                            dateOfRegister = Instant.now(),
+                            dateOfStart = Instant.now().plusSeconds(86400),
+                            dateOfEnd = Instant.now().plusSeconds(259200),
+                            extraDestfine = "Additional information",
+                            name = "Hackathon 2024",
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
+                        description = "Example of a created hackathon"
+                    }
+                }
             }
             HttpStatusCode.BadRequest to {
-                description = "Invalid input data or date format"
+                description = "Invalid input data"
             }
         }
     }
 
-    val getHackathonById: RouteConfig.() -> Unit = {
-        operationId = "getHackathonById"
-        summary = "Get hackathon by ID"
-        description = "Retrieves a hackathon by its UUID"
-        tags = listOf("Hackathons")
-
-        response {
-            HttpStatusCode.OK to {
-                description = "Hackathon found"
-            }
-            HttpStatusCode.BadRequest to {
-                description = "Invalid ID format"
-            }
-            HttpStatusCode.NotFound to {
-                description = "Hackathon not found"
-            }
-        }
-    }
-
-    val getAllHackathons: RouteConfig.() -> Unit = {
-        operationId = "getAllHackathons"
-        summary = "Get all hackathons"
-        description = "Retrieves a list of all hackathons"
-        tags = listOf("Hackathons")
-
-        response {
-            HttpStatusCode.OK to {
-                description = "List of hackathons"
-            }
-        }
-    }
-
-    val putHackathon: RouteConfig.() -> Unit = {
-        operationId = "putHackathon"
+    val updateHackathon: RouteConfig.() -> Unit = {
+        operationId = "updateHackathon"
         summary = "Update hackathon"
-        description = "Updates an existing hackathon's information. Dates should be in ISO-8601 format (e.g., 2024-03-20T10:00:00Z)"
+        description = "Updates an existing hackathon"
         tags = listOf("Hackathons")
 
         request {
+            pathParameter<UUID>("id") {
+                description = "The ID of the hackathon to update"
+            }
             jsonBody<UpdateHackathonCommand> {
                 example("Update Hackathon") {
                     value = UpdateHackathonCommand(
                         id = UUID.randomUUID(),
                         name = "Updated Hackathon Name",
                         description = "Updated description",
-                        dateOfRegister = "2024-03-25T10:00:00Z",
-                        dateOfStart = "2024-04-05T09:00:00Z",
-                        dateOfEnd = "2024-04-07T18:00:00Z",
+                        dateOfRegister = Instant.now().toString(),
+                        dateOfStart = Instant.now().plusSeconds(86400).toString(),
+                        dateOfEnd = Instant.now().plusSeconds(259200).toString(),
                         extraDestfine = "Updated additional information"
                     )
-                    description = "Update hackathon's information with dates in ISO-8601 format"
+                    description = "Update an existing hackathon with optional fields"
                 }
             }
         }
@@ -104,9 +165,25 @@ object HackathonDocs {
         response {
             HttpStatusCode.OK to {
                 description = "Hackathon updated successfully"
+                jsonBody<HackathonDto> {
+                    example("Updated Hackathon") {
+                        value = HackathonDto(
+                            id = UUID.randomUUID(),
+                            description = "Updated description",
+                            dateOfRegister = Instant.now(),
+                            dateOfStart = Instant.now().plusSeconds(86400),
+                            dateOfEnd = Instant.now().plusSeconds(259200),
+                            extraDestfine = "Updated additional information",
+                            name = "Updated Hackathon Name",
+                            createdAt = Instant.now(),
+                            updatedAt = Instant.now()
+                        )
+                        description = "Example of an updated hackathon"
+                    }
+                }
             }
             HttpStatusCode.BadRequest to {
-                description = "Invalid input data or date format"
+                description = "Invalid input data or ID mismatch"
             }
             HttpStatusCode.NotFound to {
                 description = "Hackathon not found"
@@ -117,18 +194,24 @@ object HackathonDocs {
     val deleteHackathon: RouteConfig.() -> Unit = {
         operationId = "deleteHackathon"
         summary = "Delete hackathon"
-        description = "Deletes a hackathon by its UUID"
+        description = "Deletes a hackathon by its ID"
         tags = listOf("Hackathons")
 
-        response {
-            HttpStatusCode.OK to {
-                description = "Hackathon deleted successfully"
+        request {
+            pathParameter<UUID>("id") {
+                description = "The ID of the hackathon to delete"
             }
-            HttpStatusCode.BadRequest to {
-                description = "Invalid ID format"
+        }
+
+        response {
+            HttpStatusCode.NoContent to {
+                description = "Hackathon deleted successfully"
             }
             HttpStatusCode.NotFound to {
                 description = "Hackathon not found"
+            }
+            HttpStatusCode.BadRequest to {
+                description = "Invalid ID format"
             }
         }
     }

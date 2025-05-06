@@ -5,6 +5,8 @@ import com.hacksync.general.models.DeadlineCreateRequest
 import com.hacksync.general.utils.jsonBody
 import io.github.smiley4.ktoropenapi.config.RouteConfig
 import io.ktor.http.*
+import java.time.Duration
+import java.time.Instant
 import java.util.*
 import java.time.LocalDate
 
@@ -50,7 +52,7 @@ object DeadlineDocs {
                     value = DeadlineCreateRequest(
                         deadline = Deadline(
                             id = UUID.randomUUID(),
-                            date = LocalDate.now().plusDays(7),
+                            date = Instant.now().plus(Duration.ofDays(7)),
                             linkId = null,
                             name = "Project Deadline",
                             type = "PROJECT"
@@ -83,7 +85,7 @@ object DeadlineDocs {
                     value = DeadlineCreateRequest(
                         deadline = Deadline(
                             id = UUID.randomUUID(),
-                            date = LocalDate.now().plusDays(14),
+                            date = Instant.now().plus(Duration.ofDays(14)),
                             linkId = null,
                             name = "Updated Project Deadline",
                             type = "PROJECT"

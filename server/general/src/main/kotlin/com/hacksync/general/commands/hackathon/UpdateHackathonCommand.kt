@@ -1,4 +1,4 @@
-package com.hacksync.general.commands
+package com.hacksync.general.commands.hackathon
 
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable

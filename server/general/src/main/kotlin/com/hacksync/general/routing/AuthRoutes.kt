@@ -1,21 +1,18 @@
 package com.hacksync.general.routing
 
-import com.hacksync.general.commands.ReadUserByEmailCommand
-import com.hacksync.general.dtos.AuthResponse
-import com.hacksync.general.dtos.LoginRequest
-import com.hacksync.general.dtos.RegisterRequest
+import com.hacksync.general.commands.user.ReadUserByEmailCommand
+import com.hacksync.general.dto.AuthResponse
+import com.hacksync.general.dto.LoginRequest
+import com.hacksync.general.dto.RegisterRequest
 import com.hacksync.general.services.AuthService
 import com.hacksync.general.services.UserService
 import com.hacksync.general.docs.AuthDocs
-import com.hacksync.general.utils.jsonBody
 import io.ktor.http.*
-import io.ktor.server.application.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.plugin.scope
 import io.github.smiley4.ktoropenapi.post
-import io.github.smiley4.ktoropenapi.get
 
 fun Route.authRoutes() {
     route("/auth") {

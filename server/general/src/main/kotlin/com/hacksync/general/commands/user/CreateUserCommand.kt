@@ -1,4 +1,4 @@
-package com.hacksync.general.commands
+package com.hacksync.general.commands.user
 
 import com.hacksync.general.entities.Role
 import com.hacksync.general.entities.User

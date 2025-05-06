@@ -1,4 +1,4 @@
-package com.hacksync.general.dtos
+package com.hacksync.general.dto
 
 import kotlinx.serialization.Serializable
 

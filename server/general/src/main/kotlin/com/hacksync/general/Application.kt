@@ -3,7 +3,7 @@ package com.hacksync.general
 import com.hacksync.general.plugins.configureAuthentication
 import com.hacksync.general.plugins.configureDependencies
 import com.hacksync.general.plugins.configureSwagger
-import configureSerialization
+import com.hacksync.general.plugins.serialization.configureSerialization
 import io.ktor.server.application.*
 
 fun main(args: Array<String>) {

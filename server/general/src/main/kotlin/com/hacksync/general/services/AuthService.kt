@@ -2,8 +2,8 @@ package com.hacksync.general.services
 
 import com.auth0.jwt.JWT
 import com.auth0.jwt.algorithms.Algorithm
-import com.hacksync.general.dtos.LoginRequest
-import com.hacksync.general.dtos.RegisterRequest
+import com.hacksync.general.dto.LoginRequest
+import com.hacksync.general.dto.RegisterRequest
 import com.hacksync.general.entities.Role
 import com.hacksync.general.entities.User
 import com.hacksync.general.repositories.JdbiUserRepository

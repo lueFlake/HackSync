@@ -16,7 +16,8 @@ class HackathonMapper : RowMapper<Hackathon> {
             dateOfStart = rs.getTimestamp("date_of_start")?.toInstant(),
             dateOfEnd = rs.getTimestamp("date_of_end")?.toInstant(),
             extraDestfine = rs.getString("extra_destfine"),
-            linkId = rs.getString("link_id")?.let { UUID.fromString(it) },
+            createdAt = rs.getTimestamp("created_at").toInstant(),
+            updatedAt = rs.getTimestamp("updated_at").toInstant(),
             name = rs.getString("name")
         )
     }

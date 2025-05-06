@@ -1,7 +1,7 @@
 package com.hacksync.general.docs
 
-import com.hacksync.general.dtos.LoginRequest
-import com.hacksync.general.dtos.RegisterRequest
+import com.hacksync.general.dto.LoginRequest
+import com.hacksync.general.dto.RegisterRequest
 import com.hacksync.general.utils.jsonBody
 import io.github.smiley4.ktoropenapi.config.RouteConfig
 import io.ktor.http.*

@@ -1,4 +1,4 @@
-package com.hacksync.general.commands
+package com.hacksync.general.commands.user
 
 import java.util.*
 

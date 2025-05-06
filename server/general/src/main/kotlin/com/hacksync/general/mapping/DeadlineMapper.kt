@@ -11,7 +11,7 @@ class DeadlineMapper : RowMapper<Deadline> {
     override fun map(rs: ResultSet, ctx: StatementContext): Deadline {
         return Deadline(
             id = UUID.fromString(rs.getString("id")),
-            date = rs.getDate("date")?.toLocalDate(),
+            date = rs.getDate("date")?.toInstant(),
             linkId = rs.getString("link_id")?.let { UUID.fromString(it) },
             name = rs.getString("name"),
             type = rs.getString("type")

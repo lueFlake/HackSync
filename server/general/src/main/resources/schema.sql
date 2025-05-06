@@ -54,7 +54,9 @@ CREATE TABLE kanban_statuses (
     id UUID PRIMARY KEY,
     next_id UUID REFERENCES kanban_statuses(id),
     name VARCHAR(255) NOT NULL,
-    color VARCHAR(50) NOT NULL
+    color VARCHAR(50) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 -- Tasks table

@@ -1,6 +1,8 @@
 package com.hacksync.general.docs
 
-import com.hacksync.general.commands.*
+import com.hacksync.general.commands.auth.ChangePasswordCommand
+import com.hacksync.general.commands.user.CreateUserCommand
+import com.hacksync.general.commands.user.UpdateUserCommand
 import com.hacksync.general.utils.jsonBody
 import io.github.smiley4.ktoropenapi.config.RouteConfig
 import io.ktor.http.*

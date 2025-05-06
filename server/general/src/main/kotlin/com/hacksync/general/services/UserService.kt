@@ -1,6 +1,7 @@
 package com.hacksync.general.services
 
-import com.hacksync.general.commands.*
+import com.hacksync.general.commands.auth.ChangePasswordCommand
+import com.hacksync.general.commands.user.*
 import com.hacksync.general.entities.User
 import com.hacksync.general.entities.Link
 import com.hacksync.general.exceptions.ValidationException
