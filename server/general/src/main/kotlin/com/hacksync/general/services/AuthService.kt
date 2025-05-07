@@ -105,7 +105,7 @@ class AuthService(
 
         return TokenResponse(
             accessToken = accessToken,
-            refreshToken = refreshToken,
+            refreshToken = refreshToken
         )
     }
 

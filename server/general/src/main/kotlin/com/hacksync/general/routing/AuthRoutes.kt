@@ -13,6 +13,7 @@ import io.ktor.server.routing.*
 import org.koin.ktor.plugin.scope
 import io.github.smiley4.ktoropenapi.post
 import io.github.smiley4.ktoropenapi.get
+import io.ktor.server.sessions.*
 
 fun Route.authRoutes() {
     route("/auth") {
@@ -39,11 +40,20 @@ fun Route.authRoutes() {
             val tokens = authService.login(request)
             val user = userService.getByEmail(ReadUserByEmailCommand(request.email))
 
+            call.response.cookies.append(
+                name = "refreshToken",
+                value = tokens.refreshToken,
+                secure = true,
+                httpOnly = true,
+                maxAge = 24 * 60 * 60,
+                extensions = mapOf("SameSite" to "Lax")
+            )
+
             call.respond(
                 HttpStatusCode.OK,
                 AuthResponse(
                     accessToken = tokens.accessToken,
-                    refreshToken = tokens.refreshToken,
+                    refreshToken = "",
                     userId = user.id.toString(),
                     email = user.email,
                     name = user.name
@@ -53,25 +63,45 @@ fun Route.authRoutes() {
 
         post("/refresh", AuthDocs.refreshToken) {
             val authService = call.scope.get<AuthService>()
-            val request = call.receive<RefreshTokenRequest>()
+            val refreshToken = call.request.cookies["refreshToken"]
+                ?: return@post call.respond(HttpStatusCode.Unauthorized, "No refresh token provided")
 
-            val tokens = authService.refreshTokens(request)
+            val tokens = authService.refreshTokens(RefreshTokenRequest(refreshToken))
+
+            call.response.cookies.append(
+                name = "refreshToken",
+                value = tokens.refreshToken,
+                secure = true,
+                httpOnly = true,
+                maxAge = 24 * 60 * 60,
+                extensions = mapOf("SameSite" to "Lax")
+            )
 
             call.respond(
                 HttpStatusCode.OK,
                 TokenResponse(
                     accessToken = tokens.accessToken,
-                    refreshToken = tokens.refreshToken,
+                    refreshToken = "",
                 )
             )
         }
 
         post("/logout", AuthDocs.logout) {
             val authService = call.scope.get<AuthService>()
-            val refreshToken = call.request.header("Authorization")?.removePrefix("Bearer ")
+            val refreshToken = call.request.cookies["refreshToken"]
                 ?: return@post call.respond(HttpStatusCode.Unauthorized, "No refresh token provided")
 
             authService.logout(refreshToken)
+
+            call.response.cookies.append(
+                name = "refreshToken",
+                value = "",
+                secure = true,
+                httpOnly = true,
+                maxAge = 0,
+                extensions = mapOf("SameSite" to "Lax")
+            )
+
             call.respond(HttpStatusCode.OK, mapOf("message" to "Successfully logged out"))
         }
 
@@ -87,6 +117,5 @@ fun Route.authRoutes() {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("message" to "Invalid token"))
             }
         }
-
     }
 }

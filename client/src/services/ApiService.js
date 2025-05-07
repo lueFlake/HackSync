@@ -40,7 +40,7 @@ export class ApiService {
       clearTimeout(timeoutId);
 
       if (!response.ok) {
-        if (response.status === 401 && endpoint !== '/auth/refresh' && retry) {
+        if (response.status === 401 && endpoint !== '/auth/refresh') {
           return this._handleUnauthorized(endpoint, method, body, timeoutMs);
         }
         throw await this._parseError(response);
@@ -57,7 +57,7 @@ export class ApiService {
   }
 
 
-  // Внутренние методы -------------------------------------
+  // Private methods -------------------------------------
 
   static async _handleUnauthorized(endpoint, method, body, timeoutMs) {
     if (this._isRefreshing) {
@@ -69,7 +69,7 @@ export class ApiService {
     this._isRefreshing = true;
 
     try {
-      const { accessToken } = await this.request(
+      const response = await this.request(
         '/auth/refresh',
         'POST',
         null,
@@ -77,7 +77,11 @@ export class ApiService {
         this.REFRESH_TIMEOUT
       );
 
-      localStorage.setItem("accessToken", accessToken);
+      if (!response.accessToken) {
+        throw new Error('No access token in refresh response');
+      }
+
+      localStorage.setItem("accessToken", response.accessToken);
       this._flushRefreshQueue();
       return this.request(endpoint, method, body, false, timeoutMs);
     } catch (error) {
@@ -90,22 +94,18 @@ export class ApiService {
   }
 
   static _flushRefreshQueue() {
-    this._refreshQueue.forEach(p => p.resolve());
+    this._refreshQueue.forEach(({ resolve }) => resolve());
     this._refreshQueue = [];
   }
 
   static _rejectRefreshQueue(error) {
-    this._refreshQueue.forEach(p => p.reject(error));
+    this._refreshQueue.forEach(({ reject }) => reject(error));
     this._refreshQueue = [];
   }
 
   static async _parseError(response) {
-    try {
-      const errorData = await response.json();
-      return new Error(errorData.message || `HTTP error ${response.status}`);
-    } catch {
-      return new Error(`HTTP error ${response.status}`);
-    }
+    const error = await response.json().catch(() => ({ message: 'Unknown error' }));
+    return new Error(error.message || 'Request failed');
   }
 
   // Public methods ================================================
@@ -158,6 +158,32 @@ export class ApiService {
   static async logout(timeoutMs = this.DEFAULT_TIMEOUT) {
     await this.request("/auth/logout", "POST", null, false, timeoutMs);
     localStorage.removeItem("accessToken");
+  }
+
+
+  // User ------------------------------------------------------------
+  static async getUsers(timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request("/users/all", "GET", null, true, timeoutMs);
+  }
+
+  static async getUserById(id, timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request(`/users/${id}`, "GET", null, true, timeoutMs);
+  }
+
+  static async createUser(userData, timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request("/users", "POST", userData, false, timeoutMs);
+  }
+
+  static async updateUser(id, updateData, timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request(`/users/${id}`, "PUT", updateData, true, timeoutMs);
+  }
+
+  static async changePassword(id, passwords, timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request(`/users/${id}/change-password`, "POST", passwords, true, timeoutMs);
+  }
+
+  static async deleteUser(id, timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request(`/users/${id}`, "DELETE", null, true, timeoutMs);
   }
 }
 

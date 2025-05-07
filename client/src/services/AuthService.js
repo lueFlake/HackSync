@@ -14,7 +14,12 @@ class AuthService {
     try {
       const data = await ApiService.request("/auth/login", "POST", credentials, false);
       localStorage.setItem("accessToken", data.accessToken);
-      return data;
+      return {
+        accessToken: data.accessToken,
+        userId: data.userId,
+        email: data.email,
+        name: data.name
+      };
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
@@ -50,9 +55,13 @@ class AuthService {
     const token = localStorage.getItem("accessToken");
     if (!token) return false;
 
-    // Optional: Add token validation logic here
-    // For example, check expiration if JWT
-    return true;
+    try {
+      await ApiService.request("/auth/validate", "GET", null, false);
+      return true;
+    } catch (error) {
+      localStorage.removeItem("accessToken");
+      return false;
+    }
   }
 }
 

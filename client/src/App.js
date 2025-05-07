@@ -1,20 +1,18 @@
+import { styled, ThemeProvider } from '@mui/material/styles';
+import moment from 'moment';
 import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { styled } from '@mui/material/styles';
-import { ThemeProvider } from '@mui/material/styles';
+import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 import Menu from './components/Menu';
 import TopBar from './components/TopBar';
-import EventsPage from './pages/EventsPage';
+import { AuthProvider, useAuth } from './contexts/AuthContext';
 import BoardPage from './pages/BoardPage.jsx';
 import CalendarPage from './pages/CalendarPage';
-import MyTasksPage from './pages/MyTasksPage';
-import TaskPage from './pages/TaskPage';
 import ChatPage from './pages/ChatPage';
+import EventsPage from './pages/EventsPage';
 import LoginPage from './pages/LoginPage';
+import MyTasksPage from './pages/MyTasksPage';
 import ProfilePage from './pages/ProfilePage';
-import AuthService from './services/AuthService';
-import { AuthProvider } from './contexts/AuthContext';
-import moment from 'moment';
+import TaskPage from './pages/TaskPage';
 import theme from './theme';
 
 const AppContainer = styled('div')({
@@ -36,8 +34,18 @@ const MainContent = styled('main', {
 }));
 
 const PrivateRoute = ({ children }) => {
-  const isAuthenticated = AuthService.isAuthenticated();
-  return isAuthenticated ? children : <Navigate to="/login" replace />;
+  const { isAuthenticated, isLoading } = useAuth();
+  const location = useLocation();
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children;
 };
 
 function App() {
