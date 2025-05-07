@@ -1,12 +1,11 @@
 package com.hacksync.general.routing
 
 import com.hacksync.general.commands.user.ReadUserByEmailCommand
-import com.hacksync.general.dto.AuthResponse
-import com.hacksync.general.dto.LoginRequest
-import com.hacksync.general.dto.RegisterRequest
+import com.hacksync.general.dto.*
 import com.hacksync.general.services.AuthService
 import com.hacksync.general.services.UserService
 import com.hacksync.general.docs.AuthDocs
+import com.hacksync.general.models.UserResponse
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -20,11 +19,10 @@ fun Route.authRoutes() {
             val authService = call.scope.get<AuthService>()
             val request = call.receive<RegisterRequest>()
             val user = authService.register(request)
-            
+
             call.respond(
                 HttpStatusCode.Created,
-                AuthResponse(
-                    token = authService.login(LoginRequest(request.email, request.password)),
+                UserResponse(
                     userId = user.id.toString(),
                     email = user.email,
                     name = user.name
@@ -36,25 +34,35 @@ fun Route.authRoutes() {
             val authService = call.scope.get<AuthService>()
             val userService = call.scope.get<UserService>()
             val request = call.receive<LoginRequest>()
-            val token = authService.login(request)
+
+            val tokens = authService.login(request)
             val user = userService.getByEmail(ReadUserByEmailCommand(request.email))
-            
+
             call.respond(
                 HttpStatusCode.OK,
                 AuthResponse(
-                    token = token,
+                    accessToken = tokens.accessToken,
+                    refreshToken = tokens.refreshToken,
                     userId = user.id.toString(),
                     email = user.email,
                     name = user.name
                 )
             )
         }
-/*
+
         post("/refresh", AuthDocs.refreshToken) {
             val authService = call.scope.get<AuthService>()
-            val command = call.receive<RefreshTokenCommand>()
-            val tokens = authService.refreshToken(command)
-            call.respond(HttpStatusCode.OK, tokens)
+            val request = call.receive<RefreshTokenRequest>()
+
+            val tokens = authService.refreshTokens(request)
+
+            call.respond(
+                HttpStatusCode.OK,
+                TokenResponse(
+                    accessToken = tokens.accessToken,
+                    refreshToken = tokens.refreshToken,
+                )
+            )
         }
 
         post("/logout", AuthDocs.logout) {
@@ -63,19 +71,8 @@ fun Route.authRoutes() {
                 ?: return@post call.respond(HttpStatusCode.Unauthorized, "No refresh token provided")
 
             authService.logout(refreshToken)
-            call.respond(HttpStatusCode.OK)
+            call.respond(HttpStatusCode.OK, mapOf("message" to "Successfully logged out"))
         }
 
-        get("/validate", AuthDocs.validateToken) {
-            val authService = call.scope.get<AuthService>()
-            val accessToken = call.request.header("Authorization")?.removePrefix("Bearer ")
-                ?: return@get call.respond(HttpStatusCode.Unauthorized, "No access token provided")
-
-            if (authService.validateToken(accessToken)) {
-                call.respond(HttpStatusCode.OK)
-            } else {
-                call.respond(HttpStatusCode.Unauthorized, "Invalid or expired token")
-            }
-        }*/
     }
-} 
+}

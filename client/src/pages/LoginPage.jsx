@@ -1,19 +1,19 @@
-import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 import {
-  Form,
-  Input,
+  Alert,
   Button,
   Card,
-  Typography,
-  Divider,
-  Alert,
-  Layout,
-  Row,
   Col,
-  message
+  Divider,
+  Form,
+  Input,
+  Layout,
+  message,
+  Row,
+  Typography
 } from 'antd';
-import { LockOutlined, UserOutlined, MailOutlined } from '@ant-design/icons';
+import React, { useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -34,11 +34,9 @@ const LoginPage = () => {
 
     try {
       if (isLoginForm) {
-        // Для входа используем только email и password
         await login({ email: values.email, password: values.password });
         message.success('Вход выполнен успешно');
       } else {
-        // Для регистрации передаем name, email и password
         await register({
           name: values.name,
           email: values.email,
@@ -81,11 +79,6 @@ const LoginPage = () => {
                 <Title level={3}>
                   {isLoginForm ? 'Вход в систему' : 'Регистрация'}
                 </Title>
-                {location.state?.from && (
-                  <div style={{ color: '#666', marginTop: 8 }}>
-                    Для доступа к этой странице требуется авторизация
-                  </div>
-                )}
               </div>
 
               {error && (

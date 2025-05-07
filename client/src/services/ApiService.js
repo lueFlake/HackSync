@@ -3,8 +3,8 @@
 export class ApiService {
   static _isRefreshing = false;
   static _refreshQueue = [];
-  static DEFAULT_TIMEOUT = 10000; // 10 seconds
-  static REFRESH_TIMEOUT = 30000; // 30 seconds for refresh requests
+  static DEFAULT_TIMEOUT = 10000;
+  static REFRESH_TIMEOUT = 30000;
 
   /**
    * Базовый метод запроса с таймаутом
@@ -29,7 +29,7 @@ export class ApiService {
         headers.Authorization = `Bearer ${accessToken}`;
       }
 
-      const response = await fetch(`/api${endpoint}`, {
+      const response = await fetch(`http://localhost:8080${endpoint}`, {
         method,
         headers,
         body: body ? JSON.stringify(body) : null,
@@ -108,54 +108,54 @@ export class ApiService {
     }
   }
 
-  // Публичные методы ================================================
+  // Public methods ================================================
 
   // Events ----------------------------------------------------------
-  static async getEvents(timeoutMs = this._TMP_TIMEOUT) {
+  static async getEvents(timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request("/events", "GET", null, true, timeoutMs);
   }
 
-  static async createEvent(data, timeoutMs = this._TMP_TIMEOUT) {
+  static async createEvent(data, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request("/events", "POST", data, true, timeoutMs);
   }
 
-  static async updateEvent(id, data, timeoutMs = this._TMP_TIMEOUT) {
+  static async updateEvent(id, data, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request(`/events/${id}`, "PUT", data, true, timeoutMs);
   }
 
-  static async deleteEvent(id, timeoutMs = this._TMP_TIMEOUT) {
+  static async deleteEvent(id, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request(`/events/${id}`, "DELETE", null, true, timeoutMs);
   }
 
   // Tasks -----------------------------------------------------------
-  static async getTasks(timeoutMs = this._TMP_TIMEOUT) {
+  static async getTasks(timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request("/tasks", "GET", null, true, timeoutMs);
   }
 
-  static async createTask(task, timeoutMs = this._TMP_TIMEOUT) {
+  static async createTask(task, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request("/tasks", "POST", task, true, timeoutMs);
   }
 
-  static async updateTask(taskId, updates, timeoutMs = this._TMP_TIMEOUT) {
+  static async updateTask(taskId, updates, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request(`/tasks/${taskId}`, "PATCH", updates, true, timeoutMs);
   }
 
-  static async deleteTask(taskId, timeoutMs = this._TMP_TIMEOUT) {
+  static async deleteTask(taskId, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request(`/tasks/${taskId}`, "DELETE", null, true, timeoutMs);
   }
 
   // Auth ------------------------------------------------------------
-  static async register(userData, timeoutMs = this._TMP_TIMEOUT) {
+  static async register(userData, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request("/auth/register", "POST", userData, false, timeoutMs);
   }
 
-  static async login(credentials, timeoutMs = this._TMP_TIMEOUT) {
+  static async login(credentials, timeoutMs = this.DEFAULT_TIMEOUT) {
     const data = await this.request("/auth/login", "POST", credentials, false, timeoutMs);
     localStorage.setItem("accessToken", data.accessToken);
     return data;
   }
 
-  static async logout(timeoutMs = this._TMP_TIMEOUT) {
+  static async logout(timeoutMs = this.DEFAULT_TIMEOUT) {
     await this.request("/auth/logout", "POST", null, false, timeoutMs);
     localStorage.removeItem("accessToken");
   }

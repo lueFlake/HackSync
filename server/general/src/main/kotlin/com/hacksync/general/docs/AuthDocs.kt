@@ -1,6 +1,7 @@
 package com.hacksync.general.docs
 
 import com.hacksync.general.dto.LoginRequest
+import com.hacksync.general.dto.RefreshTokenRequest
 import com.hacksync.general.dto.RegisterRequest
 import com.hacksync.general.utils.jsonBody
 import io.github.smiley4.ktoropenapi.config.RouteConfig
@@ -98,6 +99,36 @@ object AuthDocs {
             }
             HttpStatusCode.Unauthorized to {
                 description = "Invalid or expired token"
+            }
+        }
+    }
+
+    val refreshToken: RouteConfig.() -> Unit = {
+        operationId = "refreshToken"
+        summary = "Refresh access token"
+        description = "Uses refresh token to get a new access token"
+        tags = listOf("Authentication")
+
+        request {
+            jsonBody<RefreshTokenRequest> {
+                example("Refresh Token") {
+                    value = RefreshTokenRequest(
+                        refreshToken = "your-refresh-token"
+                    )
+                    description = "Refresh token request"
+                }
+            }
+        }
+
+        response {
+            HttpStatusCode.OK to {
+                description = "New tokens generated successfully"
+            }
+            HttpStatusCode.BadRequest to {
+                description = "Invalid input data"
+            }
+            HttpStatusCode.Unauthorized to {
+                description = "Invalid or expired refresh token"
             }
         }
     }

@@ -1,16 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import AccountCircle from '@mui/icons-material/AccountCircle';
+import MenuIcon from '@mui/icons-material/Menu';
 import {
   AppBar,
-  Toolbar,
-  Typography,
+  Box,
   IconButton,
   Menu,
   MenuItem,
-  Box
+  Toolbar,
+  Typography
 } from '@mui/material';
-import MenuIcon from '@mui/icons-material/Menu';
-import AccountCircle from '@mui/icons-material/AccountCircle';
 import { Divider } from 'antd';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext'; // Используем контекст вместо AuthService
 
@@ -110,7 +110,7 @@ const TopBar = ({ menuOpen, setMenuOpen }) => {
           open={Boolean(anchorEl)}
           onClose={() => setAnchorEl(null)}
           anchorOrigin={{
-            vertical: 'top',
+            vertical: 'bottom',
             horizontal: 'right',
           }}
           transformOrigin={{
