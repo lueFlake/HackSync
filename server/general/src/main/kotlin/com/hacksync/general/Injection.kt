@@ -2,6 +2,8 @@ package com.hacksync.general
 
 import com.hacksync.general.repositories.*
 import com.hacksync.general.repositories.interfaces.HackathonRepository
+import com.hacksync.general.repositories.interfaces.MessageRepository
+import com.hacksync.general.repositories.interfaces.TaskRepository
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import org.koin.core.module.dsl.scopedOf
@@ -28,6 +30,7 @@ fun Application.configureInjection() {
             requestScope { scopedOf(::KanbanStatusService) }
             requestScope { scopedOf(::HackathonService) }
             requestScope { scopedOf(::TeamService) }
+            requestScope { scopedOf(::ChatService) }
 
             // Config
             single { environment.config }
@@ -40,7 +43,8 @@ fun Application.configureInjection() {
             single<JdbiDeadlineRepository> { get<Jdbi>().onDemand(JdbiDeadlineRepository::class.java) }
             single<JdbiTeamRepository> { get<Jdbi>().onDemand(JdbiTeamRepository::class.java) }
             single<JdbiLinkRepository> { get<Jdbi>().onDemand(JdbiLinkRepository::class.java) }
-            single<JdbiTaskRepository> { get<Jdbi>().onDemand(JdbiTaskRepository::class.java) }
+            single<TaskRepository> { get<Jdbi>().onDemand(JdbiTaskRepository::class.java) }
+            single<MessageRepository> { JdbiMessageRepository(get()) }
         })
     }
 }

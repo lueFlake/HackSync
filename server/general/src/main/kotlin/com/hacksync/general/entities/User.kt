@@ -1,5 +1,6 @@
 package com.hacksync.general.entities;
 
+import com.hacksync.general.dto.UserDto
 import kotlinx.serialization.Contextual
 import kotlinx.serialization.Serializable
 import java.time.Instant
@@ -18,4 +19,14 @@ data class User(
     val createdAt: Instant,
     @Contextual
     val updatedAt: Instant
-) : IEntity
+) : IEntity {
+    fun toDto() = UserDto(
+        id = id,
+        email = email,
+        role = role,
+        name = name,
+        avatarUrl = avatarUrl,
+        createdAt = createdAt,
+        updatedAt = updatedAt
+    )
+}

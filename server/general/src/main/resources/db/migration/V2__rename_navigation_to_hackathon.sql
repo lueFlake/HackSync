@@ -1,1 +1,0 @@
-ALTER TABLE navigation RENAME TO hackathon; 

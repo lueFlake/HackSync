@@ -20,6 +20,8 @@ import io.github.smiley4.ktoropenapi.put
 import io.github.smiley4.ktoropenapi.delete
 import io.github.smiley4.ktoropenapi.config.RouteConfig
 import io.ktor.http.*
+import java.time.Duration
+import java.time.Instant
 import java.time.LocalDate
 
 val getAllDeadlines: RouteConfig.() -> Unit = {
@@ -63,7 +65,7 @@ val createDeadline: RouteConfig.() -> Unit = {
                 value = DeadlineCreateRequest(
                     deadline = Deadline(
                         id = UUID.randomUUID(),
-                        date = LocalDate.now().plusDays(7),
+                        date = Instant.now().plus(Duration.ofDays(7)),
                         linkId = null,
                         name = "Project Deadline",
                         type = "PROJECT"
@@ -96,7 +98,7 @@ val updateDeadline: RouteConfig.() -> Unit = {
                 value = DeadlineCreateRequest(
                     deadline = Deadline(
                         id = UUID.randomUUID(),
-                        date = LocalDate.now().plusDays(14),
+                        date = Instant.now().plus(Duration.ofDays(14)),
                         linkId = null,
                         name = "Updated Project Deadline",
                         type = "PROJECT"
@@ -142,7 +144,7 @@ fun Route.deadlineRoutes() {
 
         get("", DeadlineDocs.getAllDeadlines) {
             val deadlines = deadlineService.getAll()
-            call.respond(HttpStatusCode.OK, deadlines)
+            call.respond(HttpStatusCode.OK, deadlines.map { it.toDto() })
         }
 
         get("/{id}", DeadlineDocs.getDeadlineById) {
@@ -152,13 +154,13 @@ fun Route.deadlineRoutes() {
             val deadline = deadlineService.getById(id)
                 ?: return@get call.respond(HttpStatusCode.NotFound, "Deadline not found")
 
-            call.respond(HttpStatusCode.OK, deadline)
+            call.respond(HttpStatusCode.OK, deadline.toDto())
         }
 
         post("", DeadlineDocs.createDeadline) {
             val request = call.receive<DeadlineCreateRequest>()
             val createdDeadline = deadlineService.create(request.deadline)
-            call.respond(HttpStatusCode.Created, createdDeadline)
+            call.respond(HttpStatusCode.Created, createdDeadline.toDto())
         }
 
         put("/{id}", DeadlineDocs.updateDeadline) {
@@ -167,7 +169,7 @@ fun Route.deadlineRoutes() {
 
             val request = call.receive<DeadlineCreateRequest>()
             val updatedDeadline = deadlineService.update(request.deadline)
-            call.respond(HttpStatusCode.OK, updatedDeadline)
+            call.respond(HttpStatusCode.OK, updatedDeadline.toDto())
         }
 
         delete("/{id}", DeadlineDocs.deleteDeadline) {

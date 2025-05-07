@@ -7,6 +7,6 @@ interface HackathonRepository {
     fun getAll(): List<Hackathon>
     fun getById(id: UUID): Hackathon?
     fun insert(hackathon: Hackathon)
-    fun update(hackathon: Hackathon): Unit
+    fun update(hackathon: Hackathon)
     fun delete(id: UUID)
 }

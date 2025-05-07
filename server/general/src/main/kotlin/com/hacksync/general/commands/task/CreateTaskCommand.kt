@@ -18,10 +18,12 @@ data class CreateTaskCommand(
     @Contextual
     val userId: UUID?,
     @Contextual
-    val statusId: UUID,
-    @Contextual
     val dueDate: Instant?
 ) {
+    companion object {
+        val DEFAULT_BACKLOG_STATUS_ID = UUID.fromString("11111111-1111-1111-1111-111111111111")
+    }
+
     fun execute(): Task {
         val now = Instant.now()
         return Task(

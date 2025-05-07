@@ -20,6 +20,10 @@ interface JdbiLinkRepository : LinkRepository {
     @SqlQuery("SELECT * FROM links WHERE id = :id")
     override fun getById(@Bind("id") id: UUID): Link?
 
+    @UseRowMapper(LinkMapper::class)
+    @SqlQuery("SELECT * FROM links WHERE title ILIKE :title")
+    override fun getByTitle(@Bind("title") title: String): List<Link>
+
     @SqlUpdate("INSERT INTO links (id, url, title, entity_id, entity_type) VALUES (:id, :url, :title, :entityId, :entityType) RETURNING *")
     override fun insert(@BindBean link: Link)
 

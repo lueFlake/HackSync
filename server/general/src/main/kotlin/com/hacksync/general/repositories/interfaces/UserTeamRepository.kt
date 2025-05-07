@@ -4,9 +4,11 @@ import com.hacksync.general.entities.UserTeam
 import java.util.UUID
 
 interface UserTeamRepository {
-    suspend fun getAll(): List<UserTeam>
-    suspend fun getById(userId: UUID, teamId: UUID): UserTeam?
-    suspend fun insert(userTeam: UserTeam): Unit
-    suspend fun update(userTeam: UserTeam): Unit
-    suspend fun delete(userId: UUID, teamId: UUID): Unit
+    fun getAll(): List<UserTeam>
+    fun getById(userId: UUID, teamId: UUID): UserTeam?
+    fun insert(userTeam: UserTeam)
+    fun update(userTeam: UserTeam)
+    fun delete(userId: UUID, teamId: UUID)
+    fun getTeamMembers(teamId: UUID): List<UUID>
+    fun getUserTeams(userId: UUID): List<UUID>
 }

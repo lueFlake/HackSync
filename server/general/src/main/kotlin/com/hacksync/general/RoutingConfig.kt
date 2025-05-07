@@ -15,6 +15,9 @@ fun Application.configureRouting() {
         teamRoutes()
         addHackathonRoutes()
         deadlineRoutes()
-        kanbanStatusRoutes()
+        addkanbanStatusRoutes()
+        addTaskRoutes()
+        addLinkRoutes()
+        addChatRoutes()
     }
 }

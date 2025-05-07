@@ -5,6 +5,8 @@ import io.ktor.server.application.*
 import io.ktor.server.plugins.cors.routing.*
 
 import io.ktor.server.routing.*
+import io.ktor.server.websocket.*
+import kotlin.time.Duration.Companion.seconds
 
 fun Application.configureDependencies(){
     //region Cors
@@ -15,6 +17,13 @@ fun Application.configureDependencies(){
         allowMethod(HttpMethod.Patch)
         allowHeader(HttpHeaders.Authorization)
         anyHost() // @TODO: Только в дебаге
+    }
+
+    install(WebSockets) {
+        pingPeriod = 15.seconds
+        timeout = 15.seconds
+        maxFrameSize = Long.MAX_VALUE
+        masking = false
     }
     //endregion
 

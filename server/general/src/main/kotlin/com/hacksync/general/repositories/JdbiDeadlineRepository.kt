@@ -14,19 +14,18 @@ import java.util.UUID
 interface JdbiDeadlineRepository : DeadlineRepository {
     @UseRowMapper(DeadlineMapper::class)
     @SqlQuery("SELECT * FROM deadline")
-    override suspend fun getAll(): List<Deadline>
+    override fun getAll(): List<Deadline>
 
     @UseRowMapper(DeadlineMapper::class)
     @SqlQuery("SELECT * FROM deadline WHERE id = :id")
-    override suspend fun getById(@Bind("id") id: UUID): Deadline?
+    override fun getById(@Bind("id") id: UUID): Deadline?
 
     @SqlUpdate("INSERT INTO deadline (id, date, link_id, name, type) VALUES (:id, :date, :linkId, :name, :type) RETURNING *")
-    @GetGeneratedKeys
-    override suspend fun insert(@BindBean deadline: Deadline): Unit
+    override fun insert(@BindBean deadline: Deadline)
 
     @SqlUpdate("UPDATE deadline SET date = :date, link_id = :linkId, name = :name, type = :type WHERE id = :id")
-    override suspend fun update(@BindBean deadline: Deadline): Unit
+    override fun update(@BindBean deadline: Deadline)
 
     @SqlUpdate("DELETE FROM deadline WHERE id = :id")
-    override suspend fun delete(@Bind("id") id: UUID): Unit
+    override fun delete(@Bind("id") id: UUID)
 } 

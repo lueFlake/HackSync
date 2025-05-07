@@ -13,20 +13,19 @@ import java.util.UUID
 
 interface JdbiTeamRepository : TeamRepository {
     @UseRowMapper(TeamMapper::class)
-    @SqlQuery("SELECT * FROM team")
-    override suspend fun getAll(): List<Team>
+    @SqlQuery("SELECT * FROM teams")
+    override fun getAll(): List<Team>
 
     @UseRowMapper(TeamMapper::class)
-    @SqlQuery("SELECT * FROM team WHERE id = :id")
-    override suspend fun getById(@Bind("id") id: UUID): Team?
+    @SqlQuery("SELECT * FROM teams WHERE id = :id")
+    override fun getById(@Bind("id") id: UUID): Team?
 
-    @SqlUpdate("INSERT INTO team (id, hackathon_id, name) VALUES (:id, :hackathonId, :name) RETURNING *")
-    @GetGeneratedKeys
-    override suspend fun insert(@BindBean team: Team): Unit
+    @SqlUpdate("INSERT INTO teams (id, name, hackathon_id) VALUES (:id, :name, :hackathonId) RETURNING *")
+    override fun insert(@BindBean team: Team)
 
-    @SqlUpdate("UPDATE team SET hackathon_id = :hackathonId, name = :name WHERE id = :id")
-    override suspend fun update(@BindBean team: Team): Unit
+    @SqlUpdate("UPDATE teams SET name = :name, hackathon_id = :hackathonId WHERE id = :id")
+    override fun update(@BindBean team: Team)
 
-    @SqlUpdate("DELETE FROM team WHERE id = :id")
-    override suspend fun delete(@Bind("id") id: UUID): Unit
+    @SqlUpdate("DELETE FROM teams WHERE id = :id")
+    override fun delete(@Bind("id") id: UUID)
 } 

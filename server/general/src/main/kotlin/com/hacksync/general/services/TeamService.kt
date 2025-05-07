@@ -1,5 +1,6 @@
 package com.hacksync.general.services
 
+import com.hacksync.general.commands.team.*
 import com.hacksync.general.entities.Team
 import com.hacksync.general.entities.Link
 import com.hacksync.general.entities.UserTeam
@@ -15,9 +16,10 @@ class TeamService(
 ) {
     suspend fun getAll(): List<Team> = repo.getAll()
     
-    suspend fun getById(id: UUID): Team? = repo.getById(id)
+    suspend fun read(command: ReadTeamCommand): Team? = repo.getById(command.id)
     
-    suspend fun create(team: Team): Team {
+    suspend fun create(command: CreateTeamCommand): Team {
+        val team = command.execute()
         // First create the team
         repo.insert(team)
         
@@ -34,16 +36,21 @@ class TeamService(
         return team
     }
     
-    suspend fun update(team: Team): Team {
-        repo.update(team)
+    suspend fun update(command: UpdateTeamCommand): Team {
+        val existingTeam = repo.getById(command.id) ?: throw Exception("Team not found")
+        val updatedTeam = existingTeam.copy(
+            name = command.name ?: existingTeam.name,
+            updatedAt = java.time.Instant.now()
+        )
+        repo.update(updatedTeam)
         
         // Update the existing link or create a new one if it doesn't exist
-        val existingLink = getLink(team.id)
+        val existingLink = getLink(command.id)
         val link = existingLink ?: Link(
             id = UUID.randomUUID(),
-            url = "/teams/${team.id}",
-            title = "Team: ${team.name}",
-            entityId = team.id,
+            url = "/teams/${command.id}",
+            title = "Team: ${updatedTeam.name}",
+            entityId = command.id,
             entityType = "team"
         )
         
@@ -53,37 +60,33 @@ class TeamService(
             linkRepo.update(link)
         }
         
-        return team
+        return updatedTeam
     }
     
-    suspend fun delete(id: UUID) {
+    suspend fun delete(command: DeleteTeamCommand) {
         // Delete associated link first
-        getLink(id)?.let { linkRepo.delete(it.id) }
+        getLink(command.id)?.let { linkRepo.delete(it.id) }
         // Then delete the team
-        repo.delete(id)
+        repo.delete(command.id)
     }
     
     suspend fun getLink(teamId: UUID): Link? = 
         linkRepo.getAll().firstOrNull { it.entityId == teamId }
 
     // User management methods
-    suspend fun addUser(teamId: UUID, userId: UUID) {
-        userTeamRepo.insert(UserTeam(userId, teamId))
+    suspend fun addUser(command: AddUserToTeamCommand) {
+        userTeamRepo.insert(UserTeam(command.userId, command.teamId))
     }
 
-    suspend fun removeUser(teamId: UUID, userId: UUID) {
-        userTeamRepo.delete(userId, teamId)
+    suspend fun removeUser(command: RemoveUserFromTeamCommand) {
+        userTeamRepo.delete(command.userId, command.teamId)
     }
 
-    suspend fun getTeamMembers(teamId: UUID): List<UUID> {
-        return userTeamRepo.getAll()
-            .filter { it.teamId == teamId }
-            .map { it.userId }
+    suspend fun getTeamMembers(command: GetTeamMembersCommand): List<UUID> {
+        return userTeamRepo.getTeamMembers(command.teamId)
     }
 
-    suspend fun getUserTeams(userId: UUID): List<UUID> {
-        return userTeamRepo.getAll()
-            .filter { it.userId == userId }
-            .map { it.teamId }
+    suspend fun getUserTeams(command: GetUserTeamsCommand): List<UUID> {
+        return userTeamRepo.getUserTeams(command.userId)
     }
 } 

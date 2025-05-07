@@ -1,5 +1,6 @@
 package com.hacksync.general.entities
 
+import com.hacksync.general.dto.LinkDto
 import java.util.UUID
 
 data class Link(
@@ -8,4 +9,12 @@ data class Link(
     val title: String,
     val entityId: UUID,
     val entityType: String  // e.g. "user", "team", "deadline", "navigation"
-) : IEntity 
+) : IEntity {
+    fun toDto() = LinkDto(
+        id = id,
+        url = url,
+        title = title,
+        entityId = entityId,
+        entityType = entityType
+    )
+} 

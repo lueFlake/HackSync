@@ -1,8 +1,10 @@
 package com.hacksync.general.routing
 
-import com.hacksync.general.commands.*
-import com.hacksync.general.entities.Role
-import com.hacksync.general.entities.User
+import com.hacksync.general.commands.auth.ChangePasswordCommand
+import com.hacksync.general.commands.user.CreateUserCommand
+import com.hacksync.general.commands.user.DeleteUserCommand
+import com.hacksync.general.commands.user.ReadUserCommand
+import com.hacksync.general.commands.user.UpdateUserCommand
 import com.hacksync.general.docs.UserDocs
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -178,11 +180,12 @@ fun Route.addUserRoutes() {
                 return@get
             }
             val user = call.scope.get<UserService>().read(ReadUserCommand(id))
-            call.respond(HttpStatusCode.OK, user)
+            call.respond(HttpStatusCode.OK, user.toDto())
         }
 
         get("/all", UserDocs.getAllUsers) {
-            call.respond(call.scope.get<UserService>().getAll())
+            val users = call.scope.get<UserService>().getAll()
+            call.respond(users.map { it.toDto() })
         }
 
         put("/{id}", UserDocs.putUser) {

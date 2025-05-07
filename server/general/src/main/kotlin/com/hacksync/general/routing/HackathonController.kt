@@ -1,6 +1,9 @@
 package com.hacksync.general.routing
 
-import com.hacksync.general.commands.*
+import com.hacksync.general.commands.hackathon.CreateHackathonCommand
+import com.hacksync.general.commands.hackathon.DeleteHackathonCommand
+import com.hacksync.general.commands.hackathon.ReadHackathonCommand
+import com.hacksync.general.commands.hackathon.UpdateHackathonCommand
 import com.hacksync.general.docs.HackathonDocs
 import io.ktor.http.*
 import io.ktor.server.request.*
@@ -13,7 +16,7 @@ import io.github.smiley4.ktoropenapi.*
 
 fun Route.addHackathonRoutes() {
     route("/hackathons") {
-        post(HackathonDocs.postHackathon) {
+        post(HackathonDocs.createHackathon) {
             val command = call.receive<CreateHackathonCommand>()
             val hackathonId = call.scope.get<HackathonService>().create(command)
             call.respond(HttpStatusCode.Created, hackathonId)
@@ -25,14 +28,15 @@ fun Route.addHackathonRoutes() {
                 return@get
             }
             val hackathon = call.scope.get<HackathonService>().read(ReadHackathonCommand(id))
-            call.respond(HttpStatusCode.OK, hackathon)
+            call.respond(HttpStatusCode.OK, hackathon.toDto())
         }
 
         get("/all", HackathonDocs.getAllHackathons) {
-            call.respond(call.scope.get<HackathonService>().getAll())
+            val hackathons = call.scope.get<HackathonService>().getAll()
+            call.respond(hackathons.map { it.toDto() })
         }
 
-        put("/{id}", HackathonDocs.putHackathon) {
+        put("/{id}", HackathonDocs.updateHackathon) {
             val id = UUID.fromString(call.parameters["id"]) ?: run {
                 call.respond(HttpStatusCode.BadRequest, "Invalid ID")
                 return@put
