@@ -3,6 +3,7 @@ package com.hacksync.general
 import com.hacksync.general.repositories.*
 import com.hacksync.general.repositories.interfaces.HackathonRepository
 import com.hacksync.general.repositories.interfaces.MessageRepository
+import com.hacksync.general.repositories.interfaces.RevokedTokenRepository
 import com.hacksync.general.repositories.interfaces.TaskRepository
 import io.ktor.server.application.*
 import io.ktor.server.config.*
@@ -30,7 +31,7 @@ fun Application.configureInjection() {
             requestScope { scopedOf(::KanbanStatusService) }
             requestScope { scopedOf(::HackathonService) }
             requestScope { scopedOf(::TeamService) }
-            requestScope { scopedOf(::ChatService) }
+            single { ChatService(get()) }
 
             // Config
             single { environment.config }
@@ -45,6 +46,7 @@ fun Application.configureInjection() {
             single<JdbiLinkRepository> { get<Jdbi>().onDemand(JdbiLinkRepository::class.java) }
             single<TaskRepository> { get<Jdbi>().onDemand(JdbiTaskRepository::class.java) }
             single<MessageRepository> { JdbiMessageRepository(get()) }
+            single<RevokedTokenRepository> { get<Jdbi>().onDemand(JdbiRevokedTokenRepository::class.java) }
         })
     }
 }
