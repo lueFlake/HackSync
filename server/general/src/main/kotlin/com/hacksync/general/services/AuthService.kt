@@ -8,6 +8,7 @@ import com.hacksync.general.entities.User
 import com.hacksync.general.exceptions.ValidationException
 import com.hacksync.general.repositories.JdbiUserRepository
 import com.hacksync.general.repositories.JdbiRevokedTokenRepository
+import com.hacksync.general.repositories.interfaces.RevokedTokenRepository
 import com.hacksync.general.utils.PasswordUtils
 import io.ktor.server.config.*
 import java.math.BigInteger
@@ -17,7 +18,7 @@ import java.util.*
 
 class AuthService(
     private val userRepository: JdbiUserRepository,
-    private val revokedTokenRepository: JdbiRevokedTokenRepository,
+    private val revokedTokenRepository: RevokedTokenRepository,
     config: ApplicationConfig
 ) {
     private val secret = config.property("ktor.jwt.secret").getString()
