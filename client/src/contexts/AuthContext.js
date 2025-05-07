@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 import AuthService from '../services/AuthService';
 
 const AuthContext = createContext();
@@ -7,7 +7,8 @@ export const AuthProvider = ({ children }) => {
   const [authState, setAuthState] = useState({
     isAuthenticated: false,
     isLoading: true,
-    error: null
+    error: null,
+    user: null
   });
 
   const checkAuth = useCallback(async () => {
@@ -21,6 +22,7 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
+  // On mount, just check authentication status
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -36,8 +38,20 @@ export const AuthProvider = ({ children }) => {
 
   const login = async (credentials) => {
     try {
-      await AuthService.login(credentials);
-      setAuthState(prev => ({ ...prev, isAuthenticated: true, error: null }));
+      const data = await AuthService.login(credentials);
+      // Store user data in memory only
+      console.log(data)
+      let user = {
+        userId: data.userId,
+        email: data.email,
+        name: data.name
+      }
+      setAuthState(prev => ({
+        ...prev,
+        isAuthenticated: true,
+        user: user, // Assuming login response includes user data
+        error: null
+      }));
     } catch (error) {
       setAuthState(prev => ({ ...prev, error }));
       throw error;
@@ -47,10 +61,13 @@ export const AuthProvider = ({ children }) => {
   const logout = async () => {
     try {
       await AuthService.logout();
-      setAuthState(prev => ({ ...prev, isAuthenticated: false, error: null }));
-    } catch (error) {
-      setAuthState(prev => ({ ...prev, error }));
-      throw error;
+    } finally {
+      setAuthState({
+        isAuthenticated: false,
+        isLoading: false,
+        error: null,
+        user: null
+      });
     }
   };
 

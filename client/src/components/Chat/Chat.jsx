@@ -1,6 +1,7 @@
 import { Box, Button, List, ListItem, ListItemText, Paper, TextField, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import React, { useEffect, useRef, useState } from 'react';
+import { useAuth } from '../../contexts/AuthContext';
 
 const ChatContainer = styled(Paper)(({ theme }) => ({
   padding: theme.spacing(2),
@@ -20,12 +21,30 @@ const MessageInput = styled(Box)({
   gap: '8px',
 });
 
+const MessageBubble = styled(({ isOwn, ...other }) => <Box {...other} />)(
+  ({ theme, isOwn }) => ({
+    alignSelf: isOwn ? 'flex-end' : 'flex-start',
+    backgroundColor: isOwn ? theme.palette.primary.main : theme.palette.grey[300],
+    color: isOwn ? theme.palette.primary.contrastText : theme.palette.text.primary,
+    padding: theme.spacing(1.5),
+    borderRadius: isOwn
+      ? '16px 16px 0 16px'
+      : '16px 16px 16px 0',
+    maxWidth: '60%',
+    marginBottom: theme.spacing(1),
+    boxShadow: theme.shadows[1],
+    wordBreak: 'break-word',
+  })
+);
+
+
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [connected, setConnected] = useState(false);
   const [ws, setWs] = useState(null);
-  const messagesEndRef = useRef(null);
+  const messagesEndRef = useRef(null);  
+  const { user, isLoading, isAuthenticated } = useAuth();
 
   // Fetch message history
   useEffect(() => {
@@ -96,7 +115,7 @@ const Chat = () => {
     if (!connected || !newMessage.trim() || !ws) return;
     
     const message = {
-      sender: 'User', // Replace with actual user name
+      sender: user.name, 
       content: newMessage,
       timestamp: Date.now(),
       type: 'TEXT'
@@ -105,6 +124,14 @@ const Chat = () => {
     ws.send(JSON.stringify(message));
     setNewMessage('');
   };
+  
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!isAuthenticated) {
+    return <div>Please log in</div>;
+  }
 
   return (
     <ChatContainer elevation={3}>
@@ -112,14 +139,32 @@ const Chat = () => {
         Chat
       </Typography>
       <MessageList>
-        {messages.map((message, index) => (
-          <ListItem key={index}>
-            <ListItemText
-              primary={message.content}
-              secondary={`${message.sender} - ${new Date(message.timestamp).toLocaleTimeString()}`}
-            />
-          </ListItem>
-        ))}
+        {messages.map((message, index) => {
+          const isOwn = message.sender === user.name; // adjust if needed
+
+          console.log(user)
+          return (
+            <Box
+              key={index}
+              display="flex"
+              justifyContent={isOwn ? 'flex-end' : 'flex-start'}
+            >
+              <MessageBubble isOwn={isOwn}>
+                <Typography variant="body2">{message.content}</Typography>
+                <Typography
+                  variant="caption"
+                  sx={{
+                    display: 'block',
+                    textAlign: isOwn ? 'right' : 'left',
+                    mt: 0.5,
+                  }}
+                >
+                  {message.sender} — {new Date(message.timestamp).toLocaleTimeString()}
+                </Typography>
+              </MessageBubble>
+            </Box>
+          );
+        })}
         <div ref={messagesEndRef} />
       </MessageList>
       <MessageInput>
@@ -142,12 +187,12 @@ const Chat = () => {
           onClick={handleSendMessage}
           disabled={!newMessage.trim() || !connected}
         >
-          Send
+          Отправить
         </Button>
       </MessageInput>
       {!connected && (
         <Typography variant="caption" color="textSecondary" sx={{ mt: 1 }}>
-          Connecting to chat server...
+          Подключение к серверу...
         </Typography>
       )}
     </ChatContainer>

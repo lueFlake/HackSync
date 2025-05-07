@@ -1,4 +1,4 @@
-package com.hacksync.general.model
+package com.hacksync.general.entities
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.JsonElement

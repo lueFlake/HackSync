@@ -1,44 +1,25 @@
 package com.hacksync.general.routing
 
-import com.hacksync.general.configureInjection
-import com.hacksync.general.model.ChatMessage
-import com.hacksync.general.model.MediaContent
-import com.hacksync.general.model.MessageType
+import com.hacksync.general.entities.ChatMessage
+import com.hacksync.general.entities.MediaContent
+import com.hacksync.general.entities.MessageType
 import com.hacksync.general.plugins.configureDependencies
 import com.hacksync.general.plugins.serialization.configureSerialization
-import com.hacksync.general.repositories.InMemoryMessageRepository
-import com.hacksync.general.repositories.JdbiUserRepository
 import com.hacksync.general.repositories.interfaces.MessageRepository
 import com.hacksync.general.services.ChatService
-import com.hacksync.general.utils.withWebSocket
 import io.ktor.client.plugins.websocket.*
-import io.ktor.client.plugins.websocket.WebSockets
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.server.application.*
 import io.ktor.server.routing.*
-import org.koin.test.KoinTest
 import io.ktor.server.testing.*
-import io.ktor.server.websocket.*
 import io.ktor.websocket.*
-import io.mockk.coEvery
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.*
 import org.koin.dsl.module
 import org.koin.ktor.plugin.Koin
-import org.koin.ktor.ext.get
-import io.mockk.mockk
-import io.mockk.every
-import kotlinx.serialization.encodeToString
-import org.jdbi.v3.core.Jdbi
-import org.koin.core.module.dsl.scopedOf
-import org.koin.module.requestScope
-import kotlin.test.Test
-import kotlin.test.assertEquals
-import kotlin.test.assertTrue
-import kotlin.time.Duration.Companion.seconds
+import kotlin.test.*
 
 fun Application.configureTestChatApp() {
     configureDependencies()
@@ -48,11 +29,21 @@ fun Application.configureTestChatApp() {
     }
 }
 
+class InMemoryMessageRepository : MessageRepository {
+    private val messages = mutableListOf<ChatMessage>()
+
+    override fun getAll(): List<ChatMessage> = messages
+
+    override fun save(message: ChatMessage) {
+        messages.add(message)
+    }
+}
+
 class ChatControllerTest {
     @Test
     fun `test get message history`() = testApplication {
         // Arrange
-        val mockRepo = mockk<MessageRepository>()
+        val mockRepo = InMemoryMessageRepository()
         val message = ChatMessage(
             sender = "test_user",
             content = Json.encodeToJsonElement(
@@ -67,12 +58,13 @@ class ChatControllerTest {
             timestamp = 1620000000000,
             type = MessageType.IMAGE
         )
-        every { mockRepo.getAll() } returns listOf(message)
+        mockRepo.save(message)
+
         application {
             install(Koin) {
                 modules(
                     module {
-                        requestScope { scopedOf(::ChatService) }
+                        single { ChatService(mockRepo) }
                         single<MessageRepository> { mockRepo }
                     }
                 )
@@ -85,8 +77,7 @@ class ChatControllerTest {
 
         // Assert
         assertEquals(HttpStatusCode.OK, response.status)
-        val str = response.bodyAsText()
-        val history = Json.decodeFromString<List<ChatMessage>>(str)
+        val history = Json.decodeFromString<List<ChatMessage>>(response.bodyAsText())
         assertEquals(1, history.size)
         assertEquals(message.sender, history[0].sender)
         assertEquals(message.content, history[0].content)
@@ -95,85 +86,152 @@ class ChatControllerTest {
 
     @Test
     fun `test websocket connection and message exchange`() = testApplication {
-        application { configureTestChatApp() }
         // Arrange
-        val clientMessage = ChatMessage(
+        application {
+            install(Koin) {
+                modules(
+                    module {
+                        single { ChatService(get()) }
+                        single<MessageRepository> { InMemoryMessageRepository() }
+                    }
+                )
+            }
+            configureTestChatApp()
+        }
+
+        val client = createClient {
+            install(io.ktor.client.plugins.websocket.WebSockets)
+        }
+
+        val message = ChatMessage(
             sender = "TestUser",
             content = JsonPrimitive("Hello"),
-            type = MessageType.TEXT
+            type = MessageType.TEXT,
+            timestamp = System.currentTimeMillis()
         )
-        val clientMessageJson = Json.encodeToString(ChatMessage.serializer(), clientMessage)
 
-        // Act & Assert
-        withWebSocket("/chat") { incoming, outgoing ->
+        client.webSocket("/chat") {
+            // Wait for welcome message
+            val welcomeFrame = incoming.receive()
+            assertTrue(welcomeFrame is Frame.Text)
+            val welcomeMessage = Json.decodeFromString<ChatMessage>((welcomeFrame as Frame.Text).readText())
+            assertEquals("System", welcomeMessage.sender)
+            assertTrue(welcomeMessage.content.toString().contains("You are connected"))
+
             // Send message
-            outgoing.send(Frame.Text(clientMessageJson))
+            send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
 
-            // Receive the same message back (broadcast)
+            // Receive echo
             val response = incoming.receive()
             assertTrue(response is Frame.Text)
             val receivedMessage = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
-            
-            assertEquals(clientMessage.sender, receivedMessage.sender)
-            assertEquals(clientMessage.content, receivedMessage.content)
-            assertEquals(clientMessage.type, receivedMessage.type)
+
+            // Assert
+            assertEquals(message.sender, receivedMessage.sender)
+            assertEquals(message.content, receivedMessage.content)
+            assertEquals(message.type, receivedMessage.type)
         }
     }
 
     @Test
     fun `test multiple clients`() = testApplication {
-        application { configureTestChatApp() }
-        // Arrange
-        val message1 = ChatMessage(
+        application {
+            install(Koin) {
+                modules(
+                    module {
+                        single { ChatService(get()) }
+                        single<MessageRepository> { InMemoryMessageRepository() }
+                    }
+                )
+            }
+            configureTestChatApp()
+        }
+
+        val message = ChatMessage(
             sender = "User1",
             content = JsonPrimitive("Hello from User1"),
-            type = MessageType.TEXT
-        )
-        val message2 = ChatMessage(
-            sender = "User2",
-            content = JsonPrimitive("Hello from User2"),
-            type = MessageType.TEXT
+            type = MessageType.TEXT,
+            timestamp = System.currentTimeMillis()
         )
 
-        // Act & Assert
-        withWebSocket("/chat") { incoming1, outgoing1 ->
-            withWebSocket("/chat") { incoming2, outgoing2 ->
-                // Send message from first client
-                outgoing1.send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message1)))
-                
-                // Both clients should receive the message
-                val response1 = incoming1.receive()
-                val response2 = incoming2.receive()
-                
-                assertTrue(response1 is Frame.Text)
-                assertTrue(response2 is Frame.Text)
-                
-                val receivedMessage1 = Json.decodeFromString<ChatMessage>((response1 as Frame.Text).readText())
-                val receivedMessage2 = Json.decodeFromString<ChatMessage>((response2 as Frame.Text).readText())
-                
-                assertEquals(message1.sender, receivedMessage1.sender)
-                assertEquals(message1.content, receivedMessage1.content)
-                assertEquals(message1.type, receivedMessage1.type)
-                
-                assertEquals(message1.sender, receivedMessage2.sender)
-                assertEquals(message1.content, receivedMessage2.content)
-                assertEquals(message1.type, receivedMessage2.type)
+        val client1 = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
+        val client2 = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
+
+        try {
+            withTimeout(5000) {
+                val job1 = launch {
+                    client1.webSocket("/chat") {
+                        println("Client1 connected")
+                        withTimeout(1000) { incoming.receive() } // welcome
+                        println("Client1 received welcome")
+
+                        send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
+                        println("Client1 sent message")
+
+                        val response = withTimeout(1000) { incoming.receive() }
+                        println("Client1 received response")
+                        val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
+
+                        assertEquals(message.sender, received.sender)
+                        assertEquals(message.content, received.content)
+                        assertEquals(message.type, received.type)
+
+                        close()
+                    }
+                }
+
+                val job2 = launch {
+                    client2.webSocket("/chat") {
+                        println("Client2 connected")
+                        withTimeout(1000) { incoming.receive() } // welcome
+                        println("Client2 received welcome")
+
+                        val response = withTimeout(1000) { incoming.receive() }
+                        println("Client2 received message")
+                        val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
+
+                        assertEquals(message.sender, received.sender)
+                        assertEquals(message.content, received.content)
+                        assertEquals(message.type, received.type)
+
+                        close()
+                    }
+                }
+
+                joinAll(job1, job2)
             }
+        } finally {
+            client1.close()
+            client2.close()
         }
     }
 
+
     @Test
     fun `test invalid message format`() = testApplication {
-        application { configureTestChatApp() }
         // Arrange
-        val invalidMessage = "This is not a valid JSON message"
+        application {
+            install(Koin) {
+                modules(
+                    module {
+                        single { ChatService(get()) }
+                        single<MessageRepository> { InMemoryMessageRepository() }
+                    }
+                )
+            }
+            configureTestChatApp()
+        }
 
-        // Act & Assert
-        withWebSocket("/chat") { incoming, outgoing ->
-            // Send invalid message
-            outgoing.send(Frame.Text(invalidMessage))
+        val client = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
 
-            // Should receive error message
+        // Act
+        client.webSocket("/chat") {
+            val welcomeFrame = incoming.receive()
+            assertTrue(welcomeFrame is Frame.Text)
+
+            send(Frame.Text("This is not a valid JSON message"))
+
+            // Assert
             val response = incoming.receive()
             assertTrue(response is Frame.Text)
             val errorMessage = (response as Frame.Text).readText()
@@ -182,44 +240,239 @@ class ChatControllerTest {
     }
 
     @Test
-    fun `test media message`() = testApplication {
-        application { configureTestChatApp() }
+    fun `test image message exchange`() = testApplication {
         // Arrange
-        val mediaMessage = ChatMessage(
-            sender = "TestUser",
-            content = JsonObject(mapOf(
-                "url" to JsonPrimitive("http://example.com/image.jpg"),
-                "mimeType" to JsonPrimitive("image/jpeg"),
-                "fileName" to JsonPrimitive("image.jpg"),
-                "fileSize" to JsonPrimitive(1024)
-            )),
-            type = MessageType.IMAGE
+        application {
+            install(Koin) {
+                modules(
+                    module {
+                        single { ChatService(get()) }
+                        single<MessageRepository> { InMemoryMessageRepository() }
+                    }
+                )
+            }
+            configureTestChatApp()
+        }
+
+        val client = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
+
+        val imageContent = MediaContent(
+            url = "https://example.com/image.jpg",
+            mimeType = "image/jpeg",
+            fileName = "test_image.jpg",
+            fileSize = 102400,
+            thumbnailUrl = "https://example.com/thumb.jpg"
         )
-        val mediaMessageJson = Json.encodeToString(ChatMessage.serializer(), mediaMessage)
 
-        // Act & Assert
-        withWebSocket("/chat") { incoming, outgoing ->
-            // Send media message
-            outgoing.send(Frame.Text(mediaMessageJson))
+        val message = ChatMessage(
+            sender = "TestUser",
+            content = Json.encodeToJsonElement(imageContent),
+            type = MessageType.IMAGE,
+            timestamp = System.currentTimeMillis()
+        )
 
-            // Receive the same message back
+        client.webSocket("/chat") {
+            // Wait for welcome message
+            val welcomeFrame = incoming.receive()
+            assertTrue(welcomeFrame is Frame.Text)
+
+            // Send image message
+            send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
+
+            // Receive echo
             val response = incoming.receive()
             assertTrue(response is Frame.Text)
             val receivedMessage = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
-            
-            assertEquals(mediaMessage.sender, receivedMessage.sender)
-            assertEquals(mediaMessage.content, receivedMessage.content)
-            assertEquals(mediaMessage.type, receivedMessage.type)
+
+            // Assert
+            assertEquals(message.sender, receivedMessage.sender)
+            assertEquals(message.type, receivedMessage.type)
+            assertEquals(message.content, receivedMessage.content)
         }
     }
 
     @Test
-    fun `test simple websocket connection`() = testApplication {
-        application { configureTestChatApp() }
-        val client = createClient { install(WebSockets) }
+    fun `test video message exchange`() = testApplication {
+        // Arrange
+        application {
+            install(Koin) {
+                modules(
+                    module {
+                        single { ChatService(get()) }
+                        single<MessageRepository> { InMemoryMessageRepository() }
+                    }
+                )
+            }
+            configureTestChatApp()
+        }
+
+        val client = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
+
+        val videoContent = MediaContent(
+            url = "https://example.com/video.mp4",
+            mimeType = "video/mp4",
+            fileName = "test_video.mp4",
+            fileSize = 1024000,
+            thumbnailUrl = "https://example.com/video_thumb.jpg"
+        )
+
+        val message = ChatMessage(
+            sender = "TestUser",
+            content = Json.encodeToJsonElement(videoContent),
+            type = MessageType.VIDEO,
+            timestamp = System.currentTimeMillis()
+        )
+
         client.webSocket("/chat") {
-            // If we get here, the connection was successful
-            assertTrue(true)
+            // Wait for welcome message
+            val welcomeFrame = incoming.receive()
+            assertTrue(welcomeFrame is Frame.Text)
+
+            // Send video message
+            send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
+
+            // Receive echo
+            val response = incoming.receive()
+            assertTrue(response is Frame.Text)
+            val receivedMessage = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
+
+            // Assert
+            assertEquals(message.sender, receivedMessage.sender)
+            assertEquals(message.type, receivedMessage.type)
+            assertEquals(message.content, receivedMessage.content)
         }
     }
-} 
+
+    @Test
+    fun `test file message exchange`() = testApplication {
+        // Arrange
+        application {
+            install(Koin) {
+                modules(
+                    module {
+                        single { ChatService(get()) }
+                        single<MessageRepository> { InMemoryMessageRepository() }
+                    }
+                )
+            }
+            configureTestChatApp()
+        }
+
+        val client = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
+
+        val fileContent = MediaContent(
+            url = "https://example.com/document.pdf",
+            mimeType = "application/pdf",
+            fileName = "test_document.pdf",
+            fileSize = 512000,
+            thumbnailUrl = null
+        )
+
+        val message = ChatMessage(
+            sender = "TestUser",
+            content = Json.encodeToJsonElement(fileContent),
+            type = MessageType.FILE,
+            timestamp = System.currentTimeMillis()
+        )
+
+        client.webSocket("/chat") {
+            // Wait for welcome message
+            val welcomeFrame = incoming.receive()
+            assertTrue(welcomeFrame is Frame.Text)
+
+            // Send file message
+            send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
+
+            // Receive echo
+            val response = incoming.receive()
+            assertTrue(response is Frame.Text)
+            val receivedMessage = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
+
+            // Assert
+            assertEquals(message.sender, receivedMessage.sender)
+            assertEquals(message.type, receivedMessage.type)
+            assertEquals(message.content, receivedMessage.content)
+        }
+    }
+
+    @Test
+    fun `test multiple clients with media messages`() = testApplication {
+        application {
+            install(Koin) {
+                modules(
+                    module {
+                        single { ChatService(get()) }
+                        single<MessageRepository> { InMemoryMessageRepository() }
+                    }
+                )
+            }
+            configureTestChatApp()
+        }
+
+        val imageContent = MediaContent(
+            url = "https://example.com/image.jpg",
+            mimeType = "image/jpeg",
+            fileName = "test_image.jpg",
+            fileSize = 102400,
+            thumbnailUrl = "https://example.com/thumb.jpg"
+        )
+
+        val message = ChatMessage(
+            sender = "User1",
+            content = Json.encodeToJsonElement(imageContent),
+            type = MessageType.IMAGE,
+            timestamp = System.currentTimeMillis()
+        )
+
+        val client1 = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
+        val client2 = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
+
+        try {
+            withTimeout(5000) {
+                val job1 = launch {
+                    client1.webSocket("/chat") {
+                        println("Client1 connected")
+                        withTimeout(1000) { incoming.receive() } // welcome
+                        println("Client1 received welcome")
+
+                        send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
+                        println("Client1 sent image message")
+
+                        val response = withTimeout(1000) { incoming.receive() }
+                        println("Client1 received response")
+                        val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
+
+                        assertEquals(message.sender, received.sender)
+                        assertEquals(message.content, received.content)
+                        assertEquals(message.type, received.type)
+
+                        close()
+                    }
+                }
+
+                val job2 = launch {
+                    client2.webSocket("/chat") {
+                        println("Client2 connected")
+                        withTimeout(1000) { incoming.receive() } // welcome
+                        println("Client2 received welcome")
+
+                        val response = withTimeout(1000) { incoming.receive() }
+                        println("Client2 received image message")
+                        val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
+
+                        assertEquals(message.sender, received.sender)
+                        assertEquals(message.content, received.content)
+                        assertEquals(message.type, received.type)
+
+                        close()
+                    }
+                }
+
+                joinAll(job1, job2)
+            }
+        } finally {
+            client1.close()
+            client2.close()
+        }
+    }
+}

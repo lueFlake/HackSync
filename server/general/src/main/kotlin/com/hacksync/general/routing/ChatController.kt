@@ -1,20 +1,14 @@
 package com.hacksync.general.routing
 
-import com.hacksync.general.model.ChatMessage
 import com.hacksync.general.services.ChatService
 import io.ktor.http.*
-import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import io.ktor.server.websocket.*
 import io.ktor.websocket.*
 import kotlinx.coroutines.channels.ClosedSendChannelException
-import kotlinx.serialization.json.*
 import org.slf4j.LoggerFactory
 import org.koin.ktor.ext.get
-import org.koin.ktor.plugin.scope
-import java.util.*
-import kotlin.collections.LinkedHashSet
 
 private val logger = LoggerFactory.getLogger("ChatController")
 
@@ -23,14 +17,14 @@ fun Route.addChatRoutes() {
     route("/chat") {
         // Get message history
         get("/history") {
-            val chatService = call.scope.get<ChatService>()
+            val chatService = application.get<ChatService>()
             val history = chatService.getMessageHistory()
             call.respond(HttpStatusCode.OK, history)
         }
 
         // WebSocket endpoint
         webSocket {
-            val chatService = call.scope.get<ChatService>()
+            val chatService = application.get<ChatService>()
             val thisConnection = Connection(this)
             chatService.addConnection(thisConnection)
             

@@ -1,6 +1,6 @@
 package com.hacksync.general.repositories.interfaces
 
-import com.hacksync.general.model.ChatMessage
+import com.hacksync.general.entities.ChatMessage
 
 interface MessageRepository {
     fun save(message: ChatMessage)

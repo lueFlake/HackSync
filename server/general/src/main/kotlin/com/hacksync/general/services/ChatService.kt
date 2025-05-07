@@ -1,15 +1,14 @@
 package com.hacksync.general.services
 
-import com.hacksync.general.model.ChatMessage
-import com.hacksync.general.model.MediaContent
-import com.hacksync.general.model.MessageType
+import com.hacksync.general.entities.ChatMessage
+import com.hacksync.general.entities.MediaContent
+import com.hacksync.general.entities.MessageType
 import com.hacksync.general.repositories.interfaces.MessageRepository
 import com.hacksync.general.routing.Connection
 import io.ktor.websocket.*
 import kotlinx.serialization.json.*
 import org.slf4j.LoggerFactory
 import java.util.concurrent.ConcurrentHashMap
-import java.util.concurrent.CopyOnWriteArrayList
 
 private val logger = LoggerFactory.getLogger("ChatService")
 
@@ -20,7 +19,8 @@ class ChatService(private val messageRepository: MessageRepository) {
         connections[connection.name] = connection
         logger.info("New connection added: ${connection.name}")
         // Send welcome message with current user count
-        connection.session.send(Json.encodeToString(ChatMessage.serializer(), 
+        connection.session.send(Json.encodeToString(
+            ChatMessage.serializer(),
             ChatMessage(
                 sender = "System",
                 content = JsonPrimitive("You are connected! There are ${connections.size} users here."),

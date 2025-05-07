@@ -4,6 +4,7 @@ import com.hacksync.general.commands.team.*
 import com.hacksync.general.entities.Team
 import com.hacksync.general.entities.Link
 import com.hacksync.general.entities.UserTeam
+import com.hacksync.general.exceptions.ValidationException
 import com.hacksync.general.repositories.JdbiTeamRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
 import com.hacksync.general.repositories.JdbiUserTeamRepository
@@ -37,7 +38,7 @@ class TeamService(
     }
     
     suspend fun update(command: UpdateTeamCommand): Team {
-        val existingTeam = repo.getById(command.id) ?: throw Exception("Team not found")
+        val existingTeam = repo.getById(command.id) ?: throw ValidationException("Team not found")
         val updatedTeam = existingTeam.copy(
             name = command.name ?: existingTeam.name,
             updatedAt = java.time.Instant.now()

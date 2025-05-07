@@ -5,7 +5,6 @@ import com.hacksync.general.dto.*
 import com.hacksync.general.services.AuthService
 import com.hacksync.general.services.UserService
 import com.hacksync.general.docs.AuthDocs
-import com.hacksync.general.models.UserResponse
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -24,10 +23,14 @@ fun Route.authRoutes() {
 
             call.respond(
                 HttpStatusCode.Created,
-                UserResponse(
-                    userId = user.id.toString(),
+                UserDto(
+                    id = user.id,
                     email = user.email,
-                    name = user.name
+                    name = user.name,
+                    role = user.role,
+                    avatarUrl = user.avatarUrl,
+                    createdAt = user.createdAt,
+                    updatedAt = user.updatedAt
                 )
             )
         }

@@ -1,4 +1,3 @@
--- Create enum types
 CREATE TYPE role_type AS ENUM ('PARTICIPANT', 'CAPTAIN', 'MODERATOR');
 CREATE TYPE priority_type AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 
@@ -83,10 +82,20 @@ CREATE TABLE deadlines (
     type VARCHAR(50)
 );
 
--- Create indexes for better query performance
+-- Chat messages table
+CREATE TABLE chat_messages (
+    id SERIAL PRIMARY KEY,
+    sender VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    timestamp BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_links_entity ON links(entity_id, entity_type);
 CREATE INDEX idx_tasks_user ON tasks(user_id);
 CREATE INDEX idx_tasks_status ON tasks(status_id);
 CREATE INDEX idx_user_teams_user ON user_teams(user_id);
-CREATE INDEX idx_user_teams_team ON user_teams(team_id); 
+CREATE INDEX idx_user_teams_team ON user_teams(team_id);
+CREATE INDEX idx_chat_messages_timestamp ON chat_messages(timestamp); 

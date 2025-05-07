@@ -21,7 +21,7 @@ data class CreateTaskCommand(
     val dueDate: Instant?
 ) {
     companion object {
-        val DEFAULT_BACKLOG_STATUS_ID = UUID.fromString("11111111-1111-1111-1111-111111111111")
+        val DEFAULT_BACKLOG_STATUS_ID = UUID.fromString("00000000-0000-0000-0000-000000000001")
     }
 
     fun execute(): Task {
@@ -34,7 +34,7 @@ data class CreateTaskCommand(
             priority = priority,
             linkId = linkId,
             userId = userId,
-            status = null, // This will be set by the service
+            status = null,
             dueDate = dueDate,
             createdAt = now,
             updatedAt = now
