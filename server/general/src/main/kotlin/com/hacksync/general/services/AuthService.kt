@@ -58,12 +58,17 @@ class AuthService(
     }
 
     suspend fun refreshTokens(request: RefreshTokenRequest): TokenResponse {
-        val verifier = JWT.require(Algorithm.HMAC256(secret))
-            .withIssuer(issuer)
-            .build()
-
         val decodedJWT = try {
-            verifier.verify(request.refreshToken)
+            JWT.require(Algorithm.HMAC256(secret))
+                .withIssuer(issuer)
+                .withAudience(audience)
+                .build()
+                .verify(request.refreshToken)
+                .also { decoded ->
+                    if (decoded.getClaim("tokenType").asString() != "refresh") {
+                        throw ValidationException("Not a refresh token")
+                    }
+                }
         } catch (ex: Exception) {
             throw ValidationException("Invalid refresh token")
         }
@@ -129,16 +134,36 @@ class AuthService(
                 .build()
                 .verify(refreshToken)
         } catch (ex: Exception) {
-            revokedTokenRepository.revoke( // ???
-                tokenHash = hashToken(refreshToken),
-                expiresAt = Instant.now().plusSeconds(refreshTokenExpiry / 1000)
-            )
-            return
+            throw ValidationException("Invalid or expired token")
         }
 
         revokedTokenRepository.revoke(
             tokenHash = hashToken(refreshToken),
             expiresAt = decodedJWT.expiresAt.toInstant()
         )
+    }
+
+    fun validateAccessToken(accessToken: String) {
+        try {
+            val verifier = JWT.require(Algorithm.HMAC256(secret))
+                .withIssuer(issuer)
+                .withAudience(audience)
+                .build()
+
+            val decodedJWT = verifier.verify(accessToken)
+
+            val userId = decodedJWT.getClaim("userId").asString()
+            userRepository.getById(UUID.fromString(userId)) ?: throw ValidationException("User not found")
+
+            if (decodedJWT.expiresAt.before(Date())) {
+                throw ValidationException("Token has expired")
+            }
+
+            if (decodedJWT.getClaim("tokenType")?.asString() == "refresh") {
+                throw ValidationException("Invalid token type")
+            }
+        } catch (ex: Exception) {
+            throw ValidationException("Invalid token")
+        }
     }
 } 
