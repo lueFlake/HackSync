@@ -12,6 +12,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.plugin.scope
 import io.github.smiley4.ktoropenapi.post
+import io.github.smiley4.ktoropenapi.get
 
 fun Route.authRoutes() {
     route("/auth") {
@@ -72,6 +73,19 @@ fun Route.authRoutes() {
 
             authService.logout(refreshToken)
             call.respond(HttpStatusCode.OK, mapOf("message" to "Successfully logged out"))
+        }
+
+        get("/validate", AuthDocs.validateToken) {
+            val authService = call.scope.get<AuthService>()
+            val accessToken = call.request.header("Authorization")?.removePrefix("Bearer ")
+                ?: return@get call.respond(HttpStatusCode.Unauthorized, "No access token provided")
+
+            try {
+                authService.validateAccessToken(accessToken)
+                call.respond(HttpStatusCode.OK, mapOf("message" to "Token is valid"))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("message" to "Invalid token"))
+            }
         }
 
     }
