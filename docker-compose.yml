@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./server/general
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=postgres
+      - DB_USER=postgres
+      - DB_PASSWORD=mysecretpassword
+    depends_on:
+      - db
+    networks:
+      - bridge
+
+  frontend:
+    build:
+      context: ./client
+      dockerfile: Dockerfile
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - bridge
+
+  db:
+    image: postgres:17
+    hostname: 7d95e26a6d82
+    mac_address: 02:42:ac:11:00:02
+    environment:
+      - POSTGRES_PASSWORD=mysecretpassword
+      - LANG=en_US.utf8
+      - PG_MAJOR=17
+      - PG_VERSION=17.2-1.pgdg120+1
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - /var/lib/postgresql/data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - bridge
+    restart: "no"
+
+volumes:
+  postgres_data:
+
+networks:
+  bridge:
+    external: true 
