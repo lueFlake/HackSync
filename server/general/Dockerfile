@@ -14,14 +14,14 @@ RUN chmod +x ./gradlew
 # Add Kotlin plugin repository
 RUN echo 'pluginManagement { repositories { gradlePluginPortal(); maven("https://plugins.gradle.org/m2/"); maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") } }' >> settings.gradle.kts
 
-# Download dependencies
-RUN ./gradlew dependencies
+# Download dependencies using the Gradle installation from the base image
+RUN gradle dependencies
 
 # Copy source code
 COPY src ./src
 
 # Build the application
-RUN ./gradlew build --no-daemon
+RUN gradle build --no-daemon
 
 # Run stage
 FROM eclipse-temurin:21-jre-jammy
