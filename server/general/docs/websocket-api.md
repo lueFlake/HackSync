@@ -88,7 +88,7 @@ ws://{host}/chat
 
 ### JavaScript Client Example
 ```javascript
-const ws = new WebSocket('ws://localhost:8080/chat');
+const ws = new WebSocket(`ws://${ApiService.BASE_URL}/chat`);
 
 ws.onopen = () => {
     console.log('Connected to chat');

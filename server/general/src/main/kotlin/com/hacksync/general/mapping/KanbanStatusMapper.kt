@@ -9,6 +9,10 @@ import java.util.UUID
 
 class KanbanStatusMapper : RowMapper<KanbanStatus> {
     override fun map(rs: ResultSet, ctx: StatementContext): KanbanStatus {
+        val meta = rs.metaData
+        for (i in 1..meta.columnCount) {
+            println("Column ${i}: ${meta.getColumnName(i)}")
+        }
         return KanbanStatus(
             id = UUID.fromString(rs.getString("id")),
             nextId = rs.getString("next_id")?.let { UUID.fromString(it) },

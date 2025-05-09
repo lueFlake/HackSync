@@ -166,6 +166,25 @@ val deleteUser: RouteConfig.() -> Unit = {
     }
 }
 
+val getUserLink: RouteConfig.() -> Unit = {
+    operationId = "getUserLink"
+    summary = "Get user's link"
+    description = "Retrieves the link associated with a user"
+    tags = listOf("Users")
+
+    response {
+        HttpStatusCode.OK to {
+            description = "User's link retrieved successfully"
+        }
+        HttpStatusCode.BadRequest to {
+            description = "Invalid ID format"
+        }
+        HttpStatusCode.NotFound to {
+            description = "User or link not found"
+        }
+    }
+}
+
 fun Route.addUserRoutes() {
     route("/users") {
         post(UserDocs.postUser) {
@@ -186,6 +205,16 @@ fun Route.addUserRoutes() {
         get("/all", UserDocs.getAllUsers) {
             val users = call.scope.get<UserService>().getAll()
             call.respond(users.map { it.toDto() })
+        }
+
+        get("/{id}/link", getUserLink) {
+            val id = UUID.fromString(call.parameters["id"]) ?: run {
+                call.respond(HttpStatusCode.BadRequest, "Invalid ID")
+                return@get
+            }
+            val link = call.scope.get<UserService>().getLink(id)
+                ?: return@get call.respond(HttpStatusCode.NotFound, "Link not found")
+            call.respond(HttpStatusCode.OK, link.toDto())
         }
 
         put("/{id}", UserDocs.putUser) {

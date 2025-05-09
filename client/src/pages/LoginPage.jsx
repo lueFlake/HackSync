@@ -1,18 +1,18 @@
 import { LockOutlined, MailOutlined, UserOutlined } from '@ant-design/icons';
 import {
-  Alert,
-  Button,
-  Card,
-  Col,
-  Divider,
-  Form,
-  Input,
-  Layout,
-  message,
-  Row,
-  Typography
+    Alert,
+    Button,
+    Card,
+    Col,
+    Divider,
+    Form,
+    Input,
+    Layout,
+    message,
+    Row,
+    Typography
 } from 'antd';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
 import { useAuth } from '../contexts/AuthContext';
@@ -27,6 +27,12 @@ const LoginPage = () => {
   const [isLoginForm, setIsLoginForm] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (values) => {
     setLoading(true);

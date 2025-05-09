@@ -8,7 +8,7 @@ import java.util.UUID
 @Serializable
 data class DeadlineDto(
     @Contextual
-    override val id: UUID,
+    val id: UUID,
     @Contextual
     val date: Instant?,
     @Contextual

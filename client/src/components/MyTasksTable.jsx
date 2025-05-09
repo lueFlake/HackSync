@@ -1,26 +1,40 @@
 // здесь просто Ant описание страницы
 
-import React from 'react';
-import { Table, Tag } from 'antd';
-import { useNavigate } from 'react-router-dom';
-
-const statusMap = {
-  todo: { text: 'К выполнению', color: 'default' },
-  in_progress: { text: 'В работе', color: 'blue' },
-  review: { text: 'На проверке', color: 'orange' },
-  done: { text: 'Завершено', color: 'green' },
-  bug: { text: 'Ошибка', color: 'red' }
-};
+import { Table, Tag } from "antd";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import ApiService from "../services/ApiService";
 
 const priorityMap = {
-  low: { text: 'Низкий', color: 'green' },
-  medium: { text: 'Средний', color: 'orange' },
-  high: { text: 'Высокий', color: 'volcano' },
-  critical: { text: 'Критичный', color: 'red' }
+  low: { text: "Низкий", color: "green" },
+  medium: { text: "Средний", color: "orange" },
+  high: { text: "Высокий", color: "volcano" },
+  critical: { text: "Критичный", color: "red" },
 };
 
 const MyTasksTable = ({ tasks }) => {
   const navigate = useNavigate();
+  const [statusMap, setStatusMap] = useState(null);
+
+  useEffect(() => {
+    const fetchStatuses = async () => {
+      try {
+        const statuses = await ApiService.getKanbanStatuses();
+        const map = {};
+        statuses.forEach((status) => {
+          map[status.name] = {
+            text: status.name,
+            color: status.color,
+          };
+        });
+        setStatusMap(map);
+      } catch (error) {
+        console.error("Error fetching statuses:", error);
+      }
+    };
+
+    fetchStatuses();
+  }, []);
 
   const columns = [
     {
@@ -28,13 +42,15 @@ const MyTasksTable = ({ tasks }) => {
       dataIndex: "id",
       key: "id",
       render: (id) => (
-        <a onClick={(e) => {
-          e.preventDefault();
-          navigate(`/task/${id}`);
-        }}>
+        <a
+          onClick={(e) => {
+            e.preventDefault();
+            navigate(`/task/${id}`);
+          }}
+        >
           {id}
         </a>
-      )
+      ),
     },
     {
       title: "Название задачи",
@@ -42,22 +58,20 @@ const MyTasksTable = ({ tasks }) => {
       key: "name",
       render: (text, record) => (
         <div>
-          <span style={{ fontWeight: 'bold' }}>{text}</span>
-          <div style={{ marginTop: 4, color: 'rgba(0,0,0,0.45)' }}>
+          <span style={{ fontWeight: "bold" }}>{text}</span>
+          <div style={{ marginTop: 4, color: "rgba(0,0,0,0.45)" }}>
             {record.description}
           </div>
         </div>
-      )
+      ),
     },
     {
       title: "Статус",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <Tag color={statusMap[status].color}>
-          {statusMap[status].text}
-        </Tag>
-      )
+      render: (status, record) => (
+        <Tag color={record.statusColor || "gray"}>{status}</Tag>
+      ),
     },
     {
       title: "Приоритет",
@@ -67,14 +81,14 @@ const MyTasksTable = ({ tasks }) => {
         <Tag color={priorityMap[priority].color}>
           {priorityMap[priority].text}
         </Tag>
-      )
+      ),
     },
     {
       title: "Срок выполнения",
       dataIndex: "deadline",
       key: "deadline",
-      render: (date) => date || '-'
-    }
+      render: (date) => date || "-",
+    },
   ];
 
   return (

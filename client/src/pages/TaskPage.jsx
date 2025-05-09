@@ -1,12 +1,67 @@
-import { Card, Descriptions, Tag, Space, Typography, Avatar } from 'antd';
-import { UserOutlined, ClockCircleOutlined, FlagOutlined } from '@ant-design/icons';
+import {
+  ClockCircleOutlined,
+  FlagOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
+import {
+  Avatar,
+  Card,
+  Descriptions,
+  message,
+  Space,
+  Tag,
+  Typography,
+} from "antd";
+import React, { useEffect, useState } from "react";
+import { useParams } from "react-router-dom";
+import { ApiService } from "../services/ApiService";
 
-const TaskPage = ({ task }) => {
+const TaskPage = () => {
+  const { id } = useParams();
+  const [task, setTask] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchTask = async () => {
+      try {
+        setLoading(true);
+        const response = await ApiService.getTaskById(id);
+        setTask({
+          id: response.id.toString(),
+          title: response.name,
+          description: response.description,
+          priority: response.priority.toLowerCase(),
+          status: response.status.name.toLowerCase().replace(" ", "_"),
+          createdAt: response.createdAt,
+          author: {
+            id: response.userId,
+            name: response.userId, // Replace with actual user name if available
+            avatar: null,
+          },
+        });
+      } catch (error) {
+        message.error("Не удалось загрузить задачу");
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchTask();
+  }, [id]);
+
+  if (loading) {
+    return <div>Загрузка...</div>;
+  }
+
+  if (!task) {
+    return <div>Задача не найдена</div>;
+  }
+
   return (
     <Card
       title={task.title}
       bordered={false}
-      style={{ maxWidth: 800, margin: '0 auto' }}
+      style={{ maxWidth: 800, margin: "0 auto" }}
     >
       <Descriptions column={1} bordered>
         <Descriptions.Item label="Автор">
@@ -21,19 +76,29 @@ const TaskPage = ({ task }) => {
         </Descriptions.Item>
 
         <Descriptions.Item label="Приоритет">
-          <Tag color={
-            task.priority === 'high' ? 'red' :
-              task.priority === 'medium' ? 'orange' : 'green'
-          }>
+          <Tag
+            color={
+              task.priority === "high"
+                ? "red"
+                : task.priority === "medium"
+                ? "orange"
+                : "green"
+            }
+          >
             <FlagOutlined /> {task.priority}
           </Tag>
         </Descriptions.Item>
 
         <Descriptions.Item label="Статус">
-          <Tag color={
-            task.status === 'done' ? 'green' :
-              task.status === 'in_progress' ? 'blue' : 'default'
-          }>
+          <Tag
+            color={
+              task.status === "done"
+                ? "green"
+                : task.status === "in_progress"
+                ? "blue"
+                : "default"
+            }
+          >
             {task.status}
           </Tag>
         </Descriptions.Item>
@@ -48,22 +113,5 @@ const TaskPage = ({ task }) => {
     </Card>
   );
 };
-
-// mockTask !!!
-const mockTask = {
-  id: 1,
-  title: 'Реализовать авторизацию',
-  description: 'Необходимо добавить JWT аутентификацию на бэкенде',
-  priority: 'high',
-  status: 'in_progress',
-  createdAt: '2023-05-15T10:30:00Z',
-  author: {
-    id: 1,
-    name: 'Иван Петров',
-    avatar: null
-  }
-};
-
-<TaskPage task={mockTask} />
 
 export default TaskPage;

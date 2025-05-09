@@ -12,13 +12,15 @@ class TaskMapper : RowMapper<Task> {
     override fun map(rs: ResultSet, ctx: StatementContext): Task {
         return Task(
             id = UUID.fromString(rs.getString("id")),
+            serial = rs.getLong("serial"),
             number = rs.getString("number"),
             name = rs.getString("name"),
             description = rs.getString("description"),
             priority = Priority.valueOf(rs.getString("priority")),
             linkId = rs.getString("link_id")?.let { UUID.fromString(it) },
             userId = rs.getString("user_id")?.let { UUID.fromString(it) },
-            status = KanbanStatusMapper().map(rs, ctx),
+            status = rs.getString("status_id")?.let { UUID.fromString(it) },
+            hackathonId = rs.getString("hackathon_id")?.let { UUID.fromString(it) },
             dueDate = rs.getTimestamp("due_date")?.toInstant(),
             createdAt = rs.getTimestamp("created_at").toInstant(),
             updatedAt = rs.getTimestamp("updated_at").toInstant()

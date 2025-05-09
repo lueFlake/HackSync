@@ -18,8 +18,7 @@ class ChatService(private val messageRepository: MessageRepository) {
     suspend fun addConnection(connection: Connection) {
         connections[connection.name] = connection
         logger.info("New connection added: ${connection.name}")
-        // Send welcome message with current user count
-        connection.session.send(Json.encodeToString(
+        /*connection.session.send(Json.encodeToString(
             ChatMessage.serializer(),
             ChatMessage(
                 sender = "System",
@@ -27,7 +26,7 @@ class ChatService(private val messageRepository: MessageRepository) {
                 timestamp = System.currentTimeMillis(),
                 type = MessageType.TEXT
             )
-        ))
+        ))*/
     }
 
     fun removeConnection(connection: Connection) {
@@ -55,9 +54,13 @@ class ChatService(private val messageRepository: MessageRepository) {
                 when (type) {
                     "TEXT" -> Json.decodeFromJsonElement<ChatMessage>(jsonElement)
                     "IMAGE", "VIDEO", "AUDIO", "FILE" -> {
+                        // Parse content as MediaContent
+                        val content = Json.decodeFromJsonElement<MediaContent>(
+                            jsonElement["content"]?.jsonObject ?: throw IllegalArgumentException("Missing media content")
+                        )
                         ChatMessage(
                             sender = jsonElement["sender"]?.jsonPrimitive?.content ?: "Unknown",
-                            content = jsonElement["content"] as JsonObject,
+                            content = Json.encodeToJsonElement(content),
                             timestamp = System.currentTimeMillis(),
                             type = MessageType.valueOf(type)
                         )
@@ -91,7 +94,7 @@ class ChatService(private val messageRepository: MessageRepository) {
     fun getMessageHistory(): List<ChatMessage> = messageRepository.getAll()
 
     private fun validateMediaContent(mediaContent: MediaContent) {
-        when (getMessageTypeFromMime(mediaContent.mimeType)) {
+        /*when (getMessageTypeFromMime(mediaContent.mimeType)) {
             MessageType.IMAGE -> {
                 if (!isValidImageUrl(mediaContent.url)) {
                     throw IllegalArgumentException("Invalid image URL format")
@@ -113,7 +116,7 @@ class ChatService(private val messageRepository: MessageRepository) {
                 }
             }
             else -> throw IllegalArgumentException("Unsupported media type: ${mediaContent.mimeType}")
-        }
+        }*/
     }
 
     private fun getMessageTypeFromMime(mimeType: String): MessageType = when {

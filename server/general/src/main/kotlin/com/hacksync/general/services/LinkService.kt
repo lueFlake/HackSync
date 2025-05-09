@@ -6,11 +6,11 @@ import com.hacksync.general.repositories.JdbiDeadlineRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
 import com.hacksync.general.repositories.JdbiTaskRepository
 import com.hacksync.general.repositories.JdbiTeamRepository
-import com.hacksync.general.repositories.interfaces.HackathonRepository
 import kotlinx.serialization.json.Json
 import com.hacksync.general.dto.*
 import com.hacksync.general.plugins.serialization.InstantSerializer
 import com.hacksync.general.plugins.serialization.UuidSerializer
+import com.hacksync.general.repositories.interfaces.*
 import kotlinx.serialization.modules.SerializersModule
 import kotlinx.serialization.modules.polymorphic
 import java.util.UUID
@@ -35,11 +35,12 @@ val PolymorphicJson = Json {
 }
 
 class LinkService(
-    private val repo: JdbiLinkRepository,
+    private val repo: LinkRepository,
     private val hackathonRepo: HackathonRepository,
-    private val teamRepo: JdbiTeamRepository,
-    private val deadlineRepo: JdbiDeadlineRepository,
-    private val taskRepo: JdbiTaskRepository
+    private val teamRepo: TeamRepository,
+    private val deadlineRepo: DeadlineRepository,
+    private val taskRepo: TaskRepository,
+    private val userRepo: TaskRepository,
 ) {
     suspend fun getAll(): List<Link> = repo.getAll()
     suspend fun getById(id: UUID): Link? = repo.getById(id)
@@ -51,6 +52,7 @@ class LinkService(
                 "TEAM" -> teamRepo.getById(link.entityId)?.toDto()
                 "DEADLINE" -> deadlineRepo.getById(link.entityId)?.toDto()
                 "TASK" -> taskRepo.getById(link.entityId)?.toDto()
+                "USER" -> userRepo.getById(link.entityId)?.toDto()
                 else -> null
             }
             LinkWithEntity(

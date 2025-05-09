@@ -10,7 +10,7 @@ import java.util.UUID
 @Serializable
 data class TaskDto(
     @Contextual
-    override val id: UUID,
+    val id: UUID,
     val number: String,
     val name: String,
     val description: String,
@@ -19,7 +19,10 @@ data class TaskDto(
     val linkId: UUID?,
     @Contextual
     val userId: UUID?,
-    val status: KanbanStatusDto?,
+    @Contextual
+    val status: UUID?,
+    @Contextual
+    val hackathonId: UUID?,
     @Contextual
     val dueDate: Instant?,
     @Contextual

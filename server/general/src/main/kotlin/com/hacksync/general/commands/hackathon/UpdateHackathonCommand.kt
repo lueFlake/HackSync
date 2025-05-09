@@ -14,7 +14,6 @@ data class UpdateHackathonCommand(
     val dateOfRegister: String? = null,
     val dateOfStart: String? = null,
     val dateOfEnd: String? = null,
-    val extraDestfine: String? = null
 ) {
     fun toInstant(date: String?): Instant? = date?.let { Instant.parse(it) }
 } 

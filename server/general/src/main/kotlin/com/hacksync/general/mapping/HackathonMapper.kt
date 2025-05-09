@@ -15,10 +15,10 @@ class HackathonMapper : RowMapper<Hackathon> {
             dateOfRegister = rs.getTimestamp("date_of_register")?.toInstant(),
             dateOfStart = rs.getTimestamp("date_of_start")?.toInstant(),
             dateOfEnd = rs.getTimestamp("date_of_end")?.toInstant(),
-            extraDestfine = rs.getString("extra_destfine"),
-            createdAt = rs.getTimestamp("created_at").toInstant(),
-            updatedAt = rs.getTimestamp("updated_at").toInstant(),
-            name = rs.getString("name")
+            name = rs.getString("name"),
+            createdAt = rs.getTimestamp("created_at")?.toInstant(),
+            updatedAt = rs.getTimestamp("updated_at")?.toInstant(),
+            // deadlines will be set elsewhere
         )
     }
 } 

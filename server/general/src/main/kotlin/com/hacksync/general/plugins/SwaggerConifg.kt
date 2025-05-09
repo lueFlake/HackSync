@@ -39,7 +39,7 @@ fun Application.configureSwagger() {
             }
         }
         server {
-            url = "http://localhost:8080/"
+            url = "http://localhost:8080"
             description = "Development Server"
         }
         server {

@@ -34,6 +34,7 @@ fun Route.addHackathonRoutes() {
         get("/all", HackathonDocs.getAllHackathons) {
             val hackathons = call.scope.get<HackathonService>().getAll()
             call.respond(hackathons.map { it.toDto() })
+            call.respond(HttpStatusCode.OK)
         }
 
         put("/{id}", HackathonDocs.updateHackathon) {
@@ -43,7 +44,7 @@ fun Route.addHackathonRoutes() {
             }
             val command = call.receive<UpdateHackathonCommand>()
             call.scope.get<HackathonService>().update(command)
-            call.respond(HttpStatusCode.OK)
+            call.respond(HttpStatusCode.OK, mapOf("success" to true))
         }
 
         delete("/{id}", HackathonDocs.deleteHackathon) {
@@ -52,7 +53,7 @@ fun Route.addHackathonRoutes() {
                 return@delete
             }
             call.scope.get<HackathonService>().delete(DeleteHackathonCommand(id))
-            call.respond(HttpStatusCode.OK)
+            call.respond(HttpStatusCode.OK, mapOf("success" to true))
         }
     }
 } 

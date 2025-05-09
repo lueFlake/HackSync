@@ -11,8 +11,7 @@ data class CreateHackathonCommand(
     val description: String,
     val dateOfRegister: String,
     val dateOfStart: String,
-    val dateOfEnd: String,
-    val extraDestfine: String? = null
+    val dateOfEnd: String
 ) {
     fun execute(): Hackathon {
         return Hackathon(
@@ -22,7 +21,6 @@ data class CreateHackathonCommand(
             dateOfRegister = Instant.parse(this.dateOfRegister),
             dateOfStart = Instant.parse(this.dateOfStart),
             dateOfEnd = Instant.parse(this.dateOfEnd),
-            extraDestfine = this.extraDestfine,
             createdAt = Instant.now(),
             updatedAt = Instant.now()
         )

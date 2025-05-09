@@ -1,101 +1,167 @@
-import React, { useState } from 'react';
-import { useRecoilState } from 'recoil';
-import { Button, Form, Input, DatePicker, Divider, notification } from 'antd';
+import { Button, DatePicker, Divider, Form, Input, message, Select, Space } from 'antd';
+import moment from 'moment';
+import React, { useEffect, useState } from 'react';
 import EventsTable from '../components/EventsTable';
-import { eventsState } from '../state/events';
-import { ApiService } from '../services/ApiService';
-import PageContainer from '../components/PageContainer';
-import { Typography } from '@mui/material';
+import PageContainer from "../components/PageContainer";
+import { useApi } from '../hooks/useApi';
+const { TextArea } = Input;
+const { Option } = Select;
 
 const EventsPage = () => {
-  const [events, setEvents] = useRecoilState(eventsState);
-  const [isCreating, setIsCreating] = useState(false);
   const [form] = Form.useForm();
+  const [editingId, setEditingId] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [isCreating, setIsCreating] = useState(false);
+  const api = useApi();
+
+  useEffect(() => {
+    loadHackathons();
+  }, []);
+
+  const loadHackathons = async () => {
+    try {
+      const response = await api.get('/hackathons/all');
+      setEvents(response.data);
+    } catch (error) {
+      message.error('Failed to load hackathons');
+    }
+  };
+
+  const handleSubmit = async (values) => {
+    try {
+      const data = {
+        ...values,
+        dateOfRegister: values.dateOfRegister?.toISOString(),
+        dateOfStart: values.dateOfStart?.toISOString(),
+        dateOfEnd: values.dateOfEnd?.toISOString(),
+      };
+
+      if (editingId) {
+        await api.put(`/hackathons/${editingId}`, { ...data, id: editingId });
+        message.success('Hackathon updated successfully');
+      } else {
+        await api.post('/hackathons', data);
+        message.success('Hackathon created successfully');
+      }
+
+      form.resetFields();
+      setEditingId(null);
+      setIsCreating(false);
+      loadHackathons();
+    } catch (error) {
+      message.error('Failed to save hackathon');
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await api.delete(`/hackathons/${id}`);
+      message.success('Hackathon deleted successfully');
+      loadHackathons();
+    } catch (error) {
+      message.error('Failed to delete hackathon');
+    }
+  };
 
   const handleCreateStart = () => setIsCreating(true);
 
   const handleCancel = () => {
     form.resetFields();
     setIsCreating(false);
+    setEditingId(null);
   };
 
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      const newEvent = await ApiService.createEvent(values);
-
-      setEvents([...events, newEvent]);
-      notification.success({ message: 'Событие создано!' });
-      handleCancel();
-    } catch (error) {
-      notification.error({ message: 'Ошибка создания события' });
-    }
-  };
-
-  const handleDelete = async (id) => {
-    try {
-      await ApiService.deleteEvent(id);
-      setEvents(events.filter(e => e.id !== id));
-      notification.success({ message: 'Событие удалено' });
-    } catch (error) {
-      notification.error({ message: 'Ошибка удаления' });
-    }
-  };
-
-  const handleEdit = (event) => {
-    // Логика редактирования (можно реализовать через модалку или инлайн-редактирование)
-    notification.info({ message: `Редактирование события: ${event.name}` });
+  const handleEdit = (record) => {
+    setEditingId(record.id);
+    setIsCreating(true);
+    form.setFieldsValue({
+      ...record,
+      dateOfRegister: record.dateOfRegister ? moment(record.dateOfRegister) : null,
+      dateOfStart: record.dateOfStart ? moment(record.dateOfStart) : null,
+      dateOfEnd: record.dateOfEnd ? moment(record.dateOfEnd) : null,
+    });
   };
 
   return (
     <PageContainer title={"События"}>
-      <Button
-        type="primary"
-        onClick={handleCreateStart}
-        disabled={isCreating}
-      >
+      <Divider orientation="left"></Divider>
+      <Button type="primary" onClick={handleCreateStart} disabled={isCreating}>
         Создать событие
       </Button>
 
       {isCreating && (
         <>
-          <Divider orientation="left">Новое событие</Divider>
-
+          <Divider orientation="left">{editingId ? 'Редактировать событие' : 'Новое событие'}</Divider>
           <Form
             form={form}
+            onFinish={handleSubmit}
             layout="vertical"
-            style={{ maxWidth: 600, marginBottom: 24 }}
+            style={{ maxWidth: '600px', marginBottom: '24px' }}
           >
             <Form.Item
               name="name"
-              label="Название события"
-              rules={[{ required: true, message: 'Введите название' }]}
+              label="Название"
+              rules={[{ required: true, message: 'Пожалуйста, введите название хакатона' }]}
             >
-              <Input placeholder="Хакатон 2024" />
+              <Input />
             </Form.Item>
 
             <Form.Item
-              name="date"
-              label="Дата проведения"
-              rules={[{ required: true, message: 'Укажите дату' }]}
+              name="description"
+              label="Описание"
+              rules={[{ required: true, message: 'Пожалуйста, введите описание хакатона' }]}
             >
-              <DatePicker
-                showTime
+              <TextArea rows={4} />
+            </Form.Item>
+
+            <Form.Item
+              name="dateOfRegister"
+              label="Дата регистрации"
+              rules={[{ required: true, message: 'Пожалуйста, выберите дату регистрации' }]}
+            >
+              <DatePicker showTime style={{ width: '100%' }} />
+            </Form.Item>
+
+            <Form.Item
+              name="dateOfStart"
+              label="Дата начала"
+              rules={[{ required: true, message: 'Пожалуйста, выберите дату начала' }]}
+            >
+              <DatePicker showTime style={{ width: '100%' }} />
+            </Form.Item>
+
+            <Form.Item
+              name="dateOfEnd"
+              label="Дата окончания"
+              rules={[{ required: true, message: 'Пожалуйста, выберите дату окончания' }]}
+            >
+              <DatePicker showTime style={{ width: '100%' }} />
+            </Form.Item>
+
+            <Form.Item
+              name="deadlines"
+              label="Дедлайны"
+            >
+              {/*<Select
+                mode="multiple"
+                placeholder="Выберите дедлайны"
                 style={{ width: '100%' }}
-                format="DD.MM.YYYY HH:mm"
-              />
+              >
+                {deadlines.map(deadline => (
+                  <Option key={deadline.id} value={deadline.id}>
+                    {deadline.name}
+                  </Option>
+                ))}
+              </Select>*/}
             </Form.Item>
 
             <Form.Item>
-              <Button
-                type="primary"
-                onClick={handleSubmit}
-              >
-                Сохранить
-              </Button>
-              <Button onClick={handleCancel}>
-                Отмена
-              </Button>
+              <Space>
+                <Button type="primary" htmlType="submit">
+                  {editingId ? 'Сохранить' : 'Создать'}
+                </Button>
+                <Button onClick={handleCancel}>Отмена</Button>
+              </Space>
             </Form.Item>
           </Form>
         </>
@@ -103,7 +169,7 @@ const EventsPage = () => {
       <Divider />
 
       <EventsTable
-        events={events}
+        data={events}
         onEdit={handleEdit}
         onDelete={handleDelete}
       />

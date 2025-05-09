@@ -8,12 +8,15 @@ import com.hacksync.general.exceptions.ValidationException
 import com.hacksync.general.repositories.JdbiTeamRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
 import com.hacksync.general.repositories.JdbiUserTeamRepository
+import com.hacksync.general.repositories.interfaces.LinkRepository
+import com.hacksync.general.repositories.interfaces.TeamRepository
+import com.hacksync.general.repositories.interfaces.UserTeamRepository
 import java.util.UUID
 
 class TeamService(
-    private val repo: JdbiTeamRepository,
-    private val linkRepo: JdbiLinkRepository,
-    private val userTeamRepo: JdbiUserTeamRepository
+    private val repo: TeamRepository,
+    private val linkRepo: LinkRepository,
+    private val userTeamRepo: UserTeamRepository
 ) {
     suspend fun getAll(): List<Team> = repo.getAll()
     

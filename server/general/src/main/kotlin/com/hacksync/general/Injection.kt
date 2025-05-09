@@ -1,10 +1,7 @@
 package com.hacksync.general
 
 import com.hacksync.general.repositories.*
-import com.hacksync.general.repositories.interfaces.HackathonRepository
-import com.hacksync.general.repositories.interfaces.MessageRepository
-import com.hacksync.general.repositories.interfaces.RevokedTokenRepository
-import com.hacksync.general.repositories.interfaces.TaskRepository
+import com.hacksync.general.repositories.interfaces.*
 import io.ktor.server.application.*
 import io.ktor.server.config.*
 import org.koin.core.module.dsl.scopedOf
@@ -37,13 +34,13 @@ fun Application.configureInjection() {
             single { environment.config }
 
             // Repositories
-            single<JdbiUserRepository> { get<Jdbi>().onDemand(JdbiUserRepository::class.java) }
-            single<JdbiKanbanStatusRepository> { get<Jdbi>().onDemand(JdbiKanbanStatusRepository::class.java) }
-            single<JdbiUserTeamRepository> { get<Jdbi>().onDemand(JdbiUserTeamRepository::class.java) }
+            single<UserRepository> { get<Jdbi>().onDemand(JdbiUserRepository::class.java) }
+            single<KanbanStatusRepository> { get<Jdbi>().onDemand(JdbiKanbanStatusRepository::class.java) }
+            single<UserTeamRepository> { get<Jdbi>().onDemand(JdbiUserTeamRepository::class.java) }
             single<HackathonRepository> { get<Jdbi>().onDemand(JdbiHackathonRepository::class.java) }
-            single<JdbiDeadlineRepository> { get<Jdbi>().onDemand(JdbiDeadlineRepository::class.java) }
-            single<JdbiTeamRepository> { get<Jdbi>().onDemand(JdbiTeamRepository::class.java) }
-            single<JdbiLinkRepository> { get<Jdbi>().onDemand(JdbiLinkRepository::class.java) }
+            single<DeadlineRepository> { get<Jdbi>().onDemand(JdbiDeadlineRepository::class.java) }
+            single<TeamRepository> { get<Jdbi>().onDemand(JdbiTeamRepository::class.java) }
+            single<LinkRepository> { get<Jdbi>().onDemand(JdbiLinkRepository::class.java) }
             single<TaskRepository> { get<Jdbi>().onDemand(JdbiTaskRepository::class.java) }
             single<MessageRepository> { JdbiMessageRepository(get()) }
             single<RevokedTokenRepository> { get<Jdbi>().onDemand(JdbiRevokedTokenRepository::class.java) }

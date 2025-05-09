@@ -27,7 +27,6 @@ interface JdbiKanbanStatusRepository : KanbanStatusRepository {
             :id, :nextId, :name, :color, :createdAt, :updatedAt
         )
     """)
-    @GetGeneratedKeys
     override fun insert(@BindBean status: KanbanStatus)
 
     @SqlUpdate("""

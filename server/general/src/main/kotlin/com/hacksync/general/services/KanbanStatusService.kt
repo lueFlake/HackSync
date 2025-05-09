@@ -4,12 +4,14 @@ import com.hacksync.general.entities.KanbanStatus
 import com.hacksync.general.entities.Link
 import com.hacksync.general.repositories.JdbiKanbanStatusRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
+import com.hacksync.general.repositories.interfaces.KanbanStatusRepository
+import com.hacksync.general.repositories.interfaces.LinkRepository
 import java.time.Instant
 import java.util.UUID
 
 class KanbanStatusService(
-    private val repo: JdbiKanbanStatusRepository,
-    private val linkRepo: JdbiLinkRepository
+    private val repo: KanbanStatusRepository,
+    private val linkRepo: LinkRepository
 ) {
     suspend fun getAll(): List<KanbanStatus> = repo.getAll()
     

@@ -5,6 +5,7 @@ import com.hacksync.general.commands.status.DeleteKanbanStatusCommand
 import com.hacksync.general.commands.status.ReadKanbanStatusCommand
 import com.hacksync.general.commands.status.UpdateKanbanStatusCommand
 import com.hacksync.general.services.KanbanStatusService
+import com.hacksync.general.docs.KanbanStatusDocs
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -19,13 +20,13 @@ import org.koin.ktor.plugin.scope
 fun Route.addkanbanStatusRoutes() {
     route("/kanban-statuses") {
         // Get all kanban statuses
-        get {
+        get("", KanbanStatusDocs.getAllKanbanStatuses) {
             val statuses = call.scope.get<KanbanStatusService>().getAll()
             call.respond(statuses)
         }
 
         // Get kanban status by ID
-        get("/{id}") {
+        get("/{id}", KanbanStatusDocs.getKanbanStatusById) {
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@get call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
 
@@ -37,7 +38,7 @@ fun Route.addkanbanStatusRoutes() {
         }
 
         // Create new kanban status
-        post {
+        post("", KanbanStatusDocs.createKanbanStatus) {
             val command = call.receive<CreateKanbanStatusCommand>()
             val status = command.execute()
             call.scope.get<KanbanStatusService>().create(status)
@@ -45,7 +46,7 @@ fun Route.addkanbanStatusRoutes() {
         }
 
         // Update kanban status
-        put("/{id}") {
+        put("/{id}", KanbanStatusDocs.updateKanbanStatus) {
             val kanbanStatusService = call.scope.get<KanbanStatusService>()
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@put call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
@@ -70,7 +71,7 @@ fun Route.addkanbanStatusRoutes() {
         }
 
         // Delete kanban status
-        delete("/{id}") {
+        delete("/{id}", KanbanStatusDocs.deleteKanbanStatus) {
             val kanbanStatusService = call.scope.get<KanbanStatusService>()
             val id = UUID.fromString(call.parameters["id"])
                 ?: return@delete call.respond(HttpStatusCode.BadRequest, "Invalid ID format")

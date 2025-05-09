@@ -1,15 +1,18 @@
 package com.hacksync.general.routing
 
 import com.hacksync.general.commands.task.CreateTaskCommand
+import com.hacksync.general.commands.task.UpdateTaskCommand
 import com.hacksync.general.entities.Task
 import com.hacksync.general.services.TaskService
 import com.hacksync.general.docs.TaskDocs
+import com.hacksync.general.services.KanbanStatusService
 import io.github.smiley4.ktoropenapi.*
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import org.koin.ktor.plugin.scope
+import java.time.Instant
 import java.util.UUID
 
 fun Route.addTaskRoutes() {
@@ -58,6 +61,28 @@ fun Route.addTaskRoutes() {
             val task = call.receive<Task>().copy(id = id)
             call.scope.get<TaskService>().update(task)
             call.respond(HttpStatusCode.OK, task.toDto())
+        }
+
+        patch("/{id}", TaskDocs.updateTask) {
+            val id = UUID.fromString(call.parameters["id"])
+                ?: return@patch call.respond(HttpStatusCode.BadRequest, "Invalid ID format")
+
+            val command = call.receive<UpdateTaskCommand>()
+            val taskService = call.scope.get<TaskService>()
+            val statusService = call.scope.get<KanbanStatusService>()
+            val task = taskService.getById(id)
+                ?: return@patch call.respond(HttpStatusCode.NotFound, "Task not found")
+            
+            val updatedTask = task.copy(
+                status = command.statusId ?: task.status,
+                name = command.name ?: task.name,
+                description = command.description ?: task.description,
+                priority = command.priority ?: task.priority,
+                dueDate = command.dueDate ?: task.dueDate,
+                updatedAt = Instant.now()
+            )
+            taskService.update(updatedTask)
+            call.respond(HttpStatusCode.OK, updatedTask.toDto())
         }
 
         delete("/{id}", TaskDocs.deleteTask) {

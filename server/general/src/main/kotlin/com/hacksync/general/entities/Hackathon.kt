@@ -12,10 +12,10 @@ data class Hackathon(
     val dateOfRegister: Instant?,
     val dateOfStart: Instant?,
     val dateOfEnd: Instant?,
-    val extraDestfine: String?,
     val name: String?,
     val createdAt: Instant?,
-    val updatedAt: Instant?
+    val updatedAt: Instant?,
+    val deadlines: List<Deadline> = emptyList()
 ) {
     fun toDto() = HackathonDto(
         id = id,
@@ -24,7 +24,7 @@ data class Hackathon(
         dateOfRegister = dateOfRegister,
         dateOfStart = dateOfStart,
         dateOfEnd = dateOfEnd,
-        extraDestfine = extraDestfine,
+        deadlines = deadlines.map { it.toDto() },
         createdAt = createdAt,
         updatedAt = updatedAt
     )

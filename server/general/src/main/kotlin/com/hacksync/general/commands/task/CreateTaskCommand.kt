@@ -9,14 +9,13 @@ import java.util.UUID
 
 @Serializable
 data class CreateTaskCommand(
-    val number: String,
     val name: String,
     val description: String,
     val priority: Priority,
     @Contextual
-    val linkId: UUID?,
-    @Contextual
     val userId: UUID?,
+    @Contextual
+    val hackathonId: UUID?,
     @Contextual
     val dueDate: Instant?
 ) {
@@ -24,17 +23,19 @@ data class CreateTaskCommand(
         val DEFAULT_BACKLOG_STATUS_ID = UUID.fromString("00000000-0000-0000-0000-000000000001")
     }
 
-    fun execute(): Task {
+    fun execute(status: UUID): Task {
         val now = Instant.now()
         return Task(
             id = UUID.randomUUID(),
-            number = number,
+            number = "",
+            serial = 0,
             name = name,
             description = description,
             priority = priority,
-            linkId = linkId,
+            linkId = null,
             userId = userId,
-            status = null,
+            status = status,
+            hackathonId = hackathonId,
             dueDate = dueDate,
             createdAt = now,
             updatedAt = now

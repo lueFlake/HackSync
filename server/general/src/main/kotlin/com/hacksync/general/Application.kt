@@ -13,6 +13,7 @@ fun main(args: Array<String>) {
 }
 
 fun Application.module() {
+    configureDependencies()
     //configureHTTP()
     //configureAdministration()
     configureSerialization()
@@ -21,7 +22,6 @@ fun Application.module() {
     configureAuthentication()
     //configureMonitoring()
     //configureSecurity()
-    configureDependencies()
     configureSwagger()
     configureRouting()
 }

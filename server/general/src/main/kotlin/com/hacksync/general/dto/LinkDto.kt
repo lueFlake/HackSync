@@ -7,7 +7,7 @@ import java.util.UUID
 @Serializable
 data class LinkDto(
     @Contextual
-    override val id: UUID,
+    val id: UUID,
     val url: String,
     val title: String,
     @Contextual

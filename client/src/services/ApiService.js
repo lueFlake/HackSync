@@ -5,16 +5,75 @@ export class ApiService {
   static _refreshQueue = [];
   static DEFAULT_TIMEOUT = 10000;
   static REFRESH_TIMEOUT = 30000;
+  static DEFAULT_CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+  static BASE_URL = `http://localhost:8080`
+
+  // Cache storage
+  static _cache = new Map();
 
   /**
-   * Базовый метод запроса с таймаутом
+   * Get cached data if available and not expired
+   * @param {string} key - Cache key
+   * @returns {object|null} Cached data or null if not found/expired
+   */
+  static _getCachedData(key) {
+    const cached = this._cache.get(key);
+    if (!cached) return null;
+
+    if (Date.now() > cached.expiresAt) {
+      this._cache.delete(key);
+      return null;
+    }
+
+    return cached.data;
+  }
+
+  /**
+   * Set data in cache
+   * @param {string} key - Cache key
+   * @param {object} data - Data to cache
+   * @param {number} duration - Cache duration in milliseconds
+   */
+  static _setCachedData(key, data, duration = this.DEFAULT_CACHE_DURATION) {
+    this._cache.set(key, {
+      data,
+      expiresAt: Date.now() + duration
+    });
+  }
+
+  /**
+   * Clear specific cache entry or all cache
+   * @param {string} [key] - Optional cache key to clear specific entry
+   */
+  static clearCache(key) {
+    if (key) {
+      this._cache.delete(key);
+    } else {
+      this._cache.clear();
+    }
+  }
+
+  /**
+   * Базовый метод запроса с таймаутом и кэшированием
    * @param {string} endpoint - API endpoint
    * @param {string} method - HTTP метод
    * @param {object|null} body - Тело запроса
    * @param {boolean} retry - Повторять при 401 ошибке
    * @param {number|null} timeoutMs - Таймаут в миллисекундах
+   * @param {boolean} useCache - Использовать кэш
+   * @param {number|null} cacheDuration - Длительность кэша в миллисекундах
    */
-  static async request(endpoint, method = "GET", body = null, retry = true, timeoutMs = null) {
+  static async request(endpoint, method = "GET", body = null, retry = true, timeoutMs = null, useCache = false, cacheDuration = null) {
+    // Check cache for GET requests
+    if (useCache && method === "GET") {
+      const cacheKey = `${endpoint}${body ? JSON.stringify(body) : ''}`;
+      const cachedData = this._getCachedData(cacheKey);
+      if (cachedData) {
+        return cachedData;
+      }
+    }
+
     const controller = new AbortController();
     const timeout = timeoutMs ?? this.DEFAULT_TIMEOUT;
     const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -29,7 +88,7 @@ export class ApiService {
         headers.Authorization = `Bearer ${accessToken}`;
       }
 
-      const response = await fetch(`http://localhost:8080${endpoint}`, {
+      const response = await fetch(`${ApiService.BASE_URL}${endpoint}`, {
         method,
         headers,
         body: body ? JSON.stringify(body) : null,
@@ -46,7 +105,15 @@ export class ApiService {
         throw await this._parseError(response);
       }
 
-      return await response.json();
+      const data = await response.json();
+
+      // Cache successful GET responses
+      if (useCache && method === "GET") {
+        const cacheKey = `${endpoint}${body ? JSON.stringify(body) : ''}`;
+        this._setCachedData(cacheKey, data, cacheDuration);
+      }
+
+      return data;
     } catch (error) {
       clearTimeout(timeoutId);
       if (error.name === 'AbortError') {
@@ -111,8 +178,8 @@ export class ApiService {
   // Public methods ================================================
 
   // Events ----------------------------------------------------------
-  static async getEvents(timeoutMs = this.DEFAULT_TIMEOUT) {
-    return this.request("/events", "GET", null, true, timeoutMs);
+  static async getEvents(timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request("/events", "GET", null, true, timeoutMs, useCache);
   }
 
   static async createEvent(data, timeoutMs = this.DEFAULT_TIMEOUT) {
@@ -128,8 +195,20 @@ export class ApiService {
   }
 
   // Tasks -----------------------------------------------------------
-  static async getTasks(timeoutMs = this.DEFAULT_TIMEOUT) {
-    return this.request("/tasks", "GET", null, true, timeoutMs);
+  static async getTasks(timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request("/tasks", "GET", null, true, timeoutMs, useCache);
+  }
+
+  static async getTaskById(id, timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request(`/tasks/${id}`, "GET", null, true, timeoutMs, useCache);
+  }
+
+  static async getTasksByUserId(userId, timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request(`/tasks/user/${userId}`, "GET", null, true, timeoutMs, useCache);
+  }
+
+  static async getTasksByStatusId(statusId, timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request(`/tasks/status/${statusId}`, "GET", null, true, timeoutMs, useCache);
   }
 
   static async createTask(task, timeoutMs = this.DEFAULT_TIMEOUT) {
@@ -137,7 +216,13 @@ export class ApiService {
   }
 
   static async updateTask(taskId, updates, timeoutMs = this.DEFAULT_TIMEOUT) {
-    return this.request(`/tasks/${taskId}`, "PATCH", updates, true, timeoutMs);
+    // Ensure we're sending the correct format for UUIDs
+    const payload = {
+      ...updates,
+      id: taskId,  // Keep the UUID format
+      statusId: updates.statusId  // Keep the UUID format
+    };
+    return this.request(`/tasks/${taskId}`, "PATCH", payload, true, timeoutMs);
   }
 
   static async deleteTask(taskId, timeoutMs = this.DEFAULT_TIMEOUT) {
@@ -162,12 +247,12 @@ export class ApiService {
 
 
   // User ------------------------------------------------------------
-  static async getUsers(timeoutMs = this.DEFAULT_TIMEOUT) {
-    return this.request("/users/all", "GET", null, true, timeoutMs);
+  static async getUsers(timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request("/users/all", "GET", null, true, timeoutMs, useCache);
   }
 
-  static async getUserById(id, timeoutMs = this.DEFAULT_TIMEOUT) {
-    return this.request(`/users/${id}`, "GET", null, true, timeoutMs);
+  static async getUserById(id, timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request(`/users/${id}`, "GET", null, true, timeoutMs, useCache);
   }
 
   static async createUser(userData, timeoutMs = this.DEFAULT_TIMEOUT) {
@@ -184,6 +269,32 @@ export class ApiService {
 
   static async deleteUser(id, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request(`/users/${id}`, "DELETE", null, true, timeoutMs);
+  }
+
+  // Status ----------------------------------------------------------
+
+  static async getKanbanStatuses(timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request("/kanban-statuses", "GET", null, true, timeoutMs, useCache);
+  }
+
+  static async getKanbanStatusById(id, timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request(`/kanban-statuses/${id}`, "GET", null, true, timeoutMs, useCache);
+  }
+
+  static async createKanbanStatus(statusData, timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request("/kanban-statuses", "POST", statusData, true, timeoutMs);
+  }
+
+  static async updateKanbanStatus(id, statusData, timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request(`/kanban-statuses/${id}`, "PUT", statusData, true, timeoutMs);
+  }
+
+  static async deleteKanbanStatus(id, timeoutMs = this.DEFAULT_TIMEOUT) {
+    return this.request(`/kanban-statuses/${id}`, "DELETE", null, true, timeoutMs);
+  }
+  // Chat ------------------------------------------------------------
+  static async chatHistory(timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
+    return this.request(`/chat/history`, "GET", null, true, timeoutMs, useCache);
   }
 }
 

@@ -39,13 +39,13 @@ CREATE TABLE user_teams (
 -- Hackathons table
 CREATE TABLE hackathons (
     id UUID PRIMARY KEY,
+    name VARCHAR(255),
     description TEXT,
-    date_of_register DATE,
-    date_of_start DATE,
-    date_of_end DATE,
-    extra_destfine TEXT,
-    link_id UUID REFERENCES links(id),
-    name VARCHAR(255)
+    date_of_register TIMESTAMP WITH TIME ZONE,
+    date_of_start TIMESTAMP WITH TIME ZONE,
+    date_of_end TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
 -- KanbanStatus table
@@ -61,13 +61,14 @@ CREATE TABLE kanban_statuses (
 -- Tasks table
 CREATE TABLE tasks (
     id UUID PRIMARY KEY,
-    number VARCHAR(50) NOT NULL,
+    numeric_id SERIAL UNIQUE,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     priority priority_type NOT NULL,
     link_id UUID REFERENCES links(id),
     user_id UUID REFERENCES users(id),
     status_id UUID REFERENCES kanban_statuses(id) NOT NULL,
+    hackathon_id UUID REFERENCES hackathons(id),
     due_date TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE NOT NULL,
     updated_at TIMESTAMP WITH TIME ZONE NOT NULL
@@ -89,13 +90,23 @@ CREATE TABLE chat_messages (
     content TEXT NOT NULL,
     type VARCHAR(50) NOT NULL,
     timestamp BIGINT NOT NULL,
+    hackathon_id UUID REFERENCES hackathons(id),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Hackathon-Deadline many-to-many relationship
+CREATE TABLE hackathon_deadlines (
+    hackathon_id UUID REFERENCES hackathons(id) ON DELETE CASCADE,
+    deadline_id UUID REFERENCES deadlines(id) ON DELETE CASCADE,
+    PRIMARY KEY (hackathon_id, deadline_id)
 );
 
 CREATE INDEX idx_users_email ON users(email);
 CREATE INDEX idx_links_entity ON links(entity_id, entity_type);
 CREATE INDEX idx_tasks_user ON tasks(user_id);
 CREATE INDEX idx_tasks_status ON tasks(status_id);
+CREATE INDEX idx_tasks_hackathon ON tasks(hackathon_id);
+CREATE INDEX idx_chat_messages_hackathon ON chat_messages(hackathon_id);
 CREATE INDEX idx_user_teams_user ON user_teams(user_id);
 CREATE INDEX idx_user_teams_team ON user_teams(team_id);
 CREATE INDEX idx_chat_messages_timestamp ON chat_messages(timestamp); 

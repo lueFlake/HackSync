@@ -8,11 +8,12 @@ import com.hacksync.general.entities.Hackathon
 import com.hacksync.general.entities.Link
 import com.hacksync.general.repositories.JdbiLinkRepository
 import com.hacksync.general.repositories.interfaces.HackathonRepository
+import com.hacksync.general.repositories.interfaces.LinkRepository
 import java.util.*
 
 class HackathonService(
     private val hackathonRepository: HackathonRepository,
-    private val linkRepository: JdbiLinkRepository
+    private val linkRepository: LinkRepository
 ) {
     suspend fun read(command: ReadHackathonCommand): Hackathon {
         return hackathonRepository.getById(command.id)!!
@@ -42,8 +43,7 @@ class HackathonService(
             description = command.description ?: existingHackathon.description,
             dateOfRegister = command.toInstant(command.dateOfRegister) ?: existingHackathon.dateOfRegister,
             dateOfStart = command.toInstant(command.dateOfStart) ?: existingHackathon.dateOfStart,
-            dateOfEnd = command.toInstant(command.dateOfEnd) ?: existingHackathon.dateOfEnd,
-            extraDestfine = command.extraDestfine ?: existingHackathon.extraDestfine
+            dateOfEnd = command.toInstant(command.dateOfEnd) ?: existingHackathon.dateOfEnd
         )
         hackathonRepository.update(updatedHackathon)
         

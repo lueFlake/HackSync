@@ -9,7 +9,7 @@ import java.util.UUID
 @Serializable
 data class UserDto(
     @Contextual
-    override val id: UUID,
+    val id: UUID,
     val email: String,
     val role: Role,
     val name: String,

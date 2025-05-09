@@ -14,39 +14,7 @@ import MyTasksPage from './pages/MyTasksPage';
 import ProfilePage from './pages/ProfilePage';
 import TaskPage from './pages/TaskPage';
 import theme from './theme';
-
-const AppContainer = styled('div')({
-  display: 'flex',
-  flexDirection: 'column',
-  height: '100vh',
-});
-
-const MainContent = styled('main', {
-  shouldForwardProp: (prop) => prop !== 'menuOpen',
-})(({ theme, menuOpen }) => ({
-  flexGrow: 1,
-  padding: theme.spacing(3),
-  marginLeft: menuOpen ? '240px' : 0,
-  transition: theme.transitions.create(['margin', 'width'], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-}));
-
-const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
-
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
-  if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  return children;
-};
+import AppContent from './AppContent.jsx';
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(true);
@@ -54,72 +22,8 @@ function App() {
 
   return (
     <ThemeProvider theme={theme}>
-      <AuthProvider>
-        <Router>
-          <AppContainer>
-            <TopBar menuOpen={menuOpen} setMenuOpen={setMenuOpen} />
-            <Menu open={menuOpen} setOpen={setMenuOpen} />
-            <MainContent menuOpen={menuOpen}>
-              <Routes>
-                <Route path="/login" element={<LoginPage />} />
-
-                <Route path="/" element={
-                  <PrivateRoute>
-                    <EventsPage setSelectedEvent={setSelectedEvent} />
-                  </PrivateRoute>
-                } />
-
-                <Route path="/board" element={
-                  <PrivateRoute>
-                    <BoardPage event={selectedEvent} />
-                  </PrivateRoute>
-                } />
-
-                <Route path="/calendar/:yearMonth" element={
-                  <PrivateRoute>
-                    <CalendarPage />
-                  </PrivateRoute>
-                } />
-
-                <Route path="/calendar" element={
-                  <PrivateRoute>
-                    <CalendarPage />
-                  </PrivateRoute>
-                } />
-
-                <Route path="/tasks" element={
-                  <PrivateRoute>
-                    <MyTasksPage event={selectedEvent} />
-                  </PrivateRoute>
-                } />
-
-                <Route path="/chat" element={
-                  <PrivateRoute>
-                    <ChatPage event={selectedEvent} />
-                  </PrivateRoute>
-                } />
-
-                <Route path="/profile" element={
-                  <PrivateRoute>
-                    <ProfilePage />
-                  </PrivateRoute>
-                } />
-
-                <Route path="/tasks/:taskId" element={
-                  <PrivateRoute>
-                    <TaskPage />
-                  </PrivateRoute>
-                } />
-
-                <Route path="*" element={
-                  <PrivateRoute>
-                    <Navigate to={`/calendar/${moment().format('YYYY-MM')}`} replace />
-                  </PrivateRoute>
-                } />
-              </Routes>
-            </MainContent>
-          </AppContainer>
-        </Router>
+      <AuthProvider> 
+        <AppContent />
       </AuthProvider>
     </ThemeProvider>
   );

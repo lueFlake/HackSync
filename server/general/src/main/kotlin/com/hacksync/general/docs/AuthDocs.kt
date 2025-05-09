@@ -132,4 +132,20 @@ object AuthDocs {
             }
         }
     }
+
+    val getCurrentUser: RouteConfig.() -> Unit = {
+        operationId = "getCurrentUser"
+        summary = "Get current user"
+        description = "Returns the current authenticated user's data"
+        tags = listOf("Auth")
+
+        response {
+            HttpStatusCode.OK to {
+                description = "User data retrieved successfully"
+            }
+            HttpStatusCode.Unauthorized to {
+                description = "Invalid or expired token"
+            }
+        }
+    }
 }

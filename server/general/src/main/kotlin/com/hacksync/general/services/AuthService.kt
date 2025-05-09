@@ -5,10 +5,13 @@ import com.auth0.jwt.algorithms.Algorithm
 import com.hacksync.general.dto.*
 import com.hacksync.general.entities.Role
 import com.hacksync.general.entities.User
+import com.hacksync.general.entities.Link
 import com.hacksync.general.exceptions.ValidationException
 import com.hacksync.general.repositories.JdbiUserRepository
 import com.hacksync.general.repositories.JdbiRevokedTokenRepository
+import com.hacksync.general.repositories.UserRepository
 import com.hacksync.general.repositories.interfaces.RevokedTokenRepository
+import com.hacksync.general.repositories.interfaces.LinkRepository
 import com.hacksync.general.utils.PasswordUtils
 import io.ktor.server.config.*
 import java.math.BigInteger
@@ -17,8 +20,9 @@ import java.time.Instant
 import java.util.*
 
 class AuthService(
-    private val userRepository: JdbiUserRepository,
+    private val userRepository: UserRepository,
     private val revokedTokenRepository: RevokedTokenRepository,
+    private val linkRepository: LinkRepository,
     config: ApplicationConfig
 ) {
     private val secret = config.property("ktor.jwt.secret").getString()
@@ -44,6 +48,16 @@ class AuthService(
         )
 
         userRepository.insert(user)
+
+        val link = Link(
+            id = UUID.randomUUID(),
+            url = "/users/${user.id}",
+            title = "User: ${user.name}",
+            entityId = user.id,
+            entityType = "user"
+        )
+        linkRepository.insert(link)
+        
         return user
     }
 
@@ -167,4 +181,33 @@ class AuthService(
             throw ValidationException("Invalid token")
         }
     }
+
+    fun getEmailFromToken(accessToken: String): String {
+        try {
+            val decodedJWT = JWT.require(Algorithm.HMAC256(secret))
+                .withIssuer(issuer)
+                .withAudience(audience)
+                .build()
+                .verify(accessToken)
+
+            val userId = decodedJWT.getClaim("userId").asString()
+            val user = userRepository.getById(UUID.fromString(userId))
+                ?: throw ValidationException("User not found")
+
+            if (decodedJWT.expiresAt.before(Date())) {
+                throw ValidationException("Token has expired")
+            }
+
+            if (decodedJWT.getClaim("tokenType")?.asString() == "refresh") {
+                throw ValidationException("Invalid token type")
+            }
+
+            return user.email
+        } catch (ex: Exception) {
+            throw ValidationException("Invalid token")
+        }
+    }
+
+    suspend fun getCurrentUserLink(userId: UUID): Link? =
+        linkRepository.getAll().firstOrNull { it.entityId == userId }
 } 

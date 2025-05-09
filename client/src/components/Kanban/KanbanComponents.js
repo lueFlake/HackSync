@@ -1,12 +1,12 @@
-import React from 'react';
 import {
-  useSortable,
   defaultAnimateLayoutChanges,
+  useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import React from 'react';
 
 const animateLayoutChanges = (args) =>
-  defaultAnimateLayoutChanges({...args, wasDragging: true});
+  defaultAnimateLayoutChanges({ ...args, wasDragging: true });
 
 export const Container = ({ children }) => (
   <div style={{ display: 'flex', gap: 16 }}>{children}</div>

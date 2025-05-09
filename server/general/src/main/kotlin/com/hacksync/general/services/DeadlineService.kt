@@ -4,11 +4,13 @@ import com.hacksync.general.entities.Deadline
 import com.hacksync.general.entities.Link
 import com.hacksync.general.repositories.JdbiDeadlineRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
+import com.hacksync.general.repositories.interfaces.DeadlineRepository
+import com.hacksync.general.repositories.interfaces.LinkRepository
 import java.util.UUID
 
 class DeadlineService(
-    private val repo: JdbiDeadlineRepository,
-    private val linkRepo: JdbiLinkRepository
+    private val repo: DeadlineRepository,
+    private val linkRepo: LinkRepository
 ) {
     suspend fun getAll(): List<Deadline> = repo.getAll()
     

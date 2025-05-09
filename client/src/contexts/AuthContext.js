@@ -14,15 +14,36 @@ export const AuthProvider = ({ children }) => {
   const checkAuth = useCallback(async () => {
     try {
       const isAuth = await AuthService.isAuthenticated();
-      setAuthState(prev => ({ ...prev, isAuthenticated: isAuth, isLoading: false }));
+      if (isAuth) {
+        // If authenticated, fetch user data
+        const userData = await AuthService.getCurrentUser();
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: true,
+          user: userData,
+          isLoading: false
+        }));
+      } else {
+        setAuthState(prev => ({
+          ...prev,
+          isAuthenticated: false,
+          user: null,
+          isLoading: false
+        }));
+      }
       return isAuth;
     } catch (error) {
-      setAuthState(prev => ({ ...prev, isLoading: false, error }));
+      setAuthState(prev => ({
+        ...prev,
+        isLoading: false,
+        error,
+        isAuthenticated: false,
+        user: null
+      }));
       return false;
     }
   }, []);
 
-  // On mount, just check authentication status
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
@@ -39,8 +60,6 @@ export const AuthProvider = ({ children }) => {
   const login = async (credentials) => {
     try {
       const data = await AuthService.login(credentials);
-      // Store user data in memory only
-      console.log(data)
       let user = {
         userId: data.userId,
         email: data.email,
@@ -49,7 +68,7 @@ export const AuthProvider = ({ children }) => {
       setAuthState(prev => ({
         ...prev,
         isAuthenticated: true,
-        user: user, // Assuming login response includes user data
+        user: user,
         error: null
       }));
     } catch (error) {

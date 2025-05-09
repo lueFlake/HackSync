@@ -2,6 +2,7 @@ package com.hacksync.general.docs
 
 import com.hacksync.general.commands.task.CreateTaskCommand
 import com.hacksync.general.commands.task.UpdateTaskCommand
+import com.hacksync.general.dto.TaskDto
 import com.hacksync.general.entities.KanbanStatus
 import com.hacksync.general.entities.Priority
 import com.hacksync.general.entities.Task
@@ -26,10 +27,10 @@ object TaskDocs {
         response {
             HttpStatusCode.OK to {
                 description = "List of all tasks"
-                jsonBody<List<Task>> {
+                jsonBody<List<TaskDto>> {
                     example("All Tasks") {
                         value = listOf(
-                            Task(
+                            TaskDto(
                                 id = UUID.randomUUID(),
                                 number = "TASK-1",
                                 name = "Implement authentication",
@@ -37,14 +38,8 @@ object TaskDocs {
                                 priority = Priority.HIGH,
                                 linkId = UUID.randomUUID(),
                                 userId = UUID.randomUUID(),
-                                status = KanbanStatus(
-                                    id = UUID.randomUUID(),
-                                    nextId = null,
-                                    name = "In Progress",
-                                    color = "#FFA500",
-                                    createdAt = Instant.now(),
-                                    updatedAt = Instant.now()
-                                ),
+                                hackathonId = UUID.randomUUID(),
+                                status = UUID.randomUUID(),
                                 dueDate = Instant.now().plusSeconds(86400),
                                 createdAt = Instant.now(),
                                 updatedAt = Instant.now()
@@ -72,9 +67,9 @@ object TaskDocs {
         response {
             HttpStatusCode.OK to {
                 description = "Task retrieved successfully"
-                jsonBody<Task> {
+                jsonBody<TaskDto> {
                     example("Single Task") {
-                        value = Task(
+                        value = TaskDto(
                             id = UUID.randomUUID(),
                             number = "TASK-1",
                             name = "Implement authentication",
@@ -82,14 +77,8 @@ object TaskDocs {
                             priority = Priority.HIGH,
                             linkId = UUID.randomUUID(),
                             userId = UUID.randomUUID(),
-                            status = KanbanStatus(
-                                id = UUID.randomUUID(),
-                                nextId = null,
-                                name = "In Progress",
-                                color = "#FFA500",
-                                createdAt = Instant.now(),
-                                updatedAt = Instant.now()
-                            ),
+                            hackathonId = UUID.randomUUID(),
+                            status = UUID.randomUUID(),
                             dueDate = Instant.now().plusSeconds(86400),
                             createdAt = Instant.now(),
                             updatedAt = Instant.now()
@@ -123,25 +112,19 @@ object TaskDocs {
         response {
             HttpStatusCode.OK to {
                 description = "List of tasks assigned to the user"
-                jsonBody<List<Task>> {
+                jsonBody<List<TaskDto>> {
                     example("User Tasks") {
                         value = listOf(
-                            Task(
+                            TaskDto(
                                 id = UUID.randomUUID(),
                                 number = "TASK-1",
                                 name = "Implement authentication",
                                 description = "Add JWT authentication to the backend",
                                 priority = Priority.HIGH,
                                 linkId = UUID.randomUUID(),
+                                hackathonId = UUID.randomUUID(),
                                 userId = UUID.randomUUID(),
-                                status = KanbanStatus(
-                                    id = UUID.randomUUID(),
-                                    nextId = null,
-                                    name = "In Progress",
-                                    color = "#FFA500",
-                                    createdAt = Instant.now(),
-                                    updatedAt = Instant.now()
-                                ),
+                                status = UUID.randomUUID(),
                                 dueDate = Instant.now().plusSeconds(86400),
                                 createdAt = Instant.now(),
                                 updatedAt = Instant.now()
@@ -173,25 +156,19 @@ object TaskDocs {
         response {
             HttpStatusCode.OK to {
                 description = "List of tasks with the specified status"
-                jsonBody<List<Task>> {
+                jsonBody<List<TaskDto>> {
                     example("Status Tasks") {
                         value = listOf(
-                            Task(
+                            TaskDto(
                                 id = UUID.randomUUID(),
                                 number = "TASK-1",
                                 name = "Implement authentication",
                                 description = "Add JWT authentication to the backend",
                                 priority = Priority.HIGH,
                                 linkId = UUID.randomUUID(),
+                                hackathonId = UUID.randomUUID(),
                                 userId = UUID.randomUUID(),
-                                status = KanbanStatus(
-                                    id = UUID.randomUUID(),
-                                    nextId = null,
-                                    name = "In Progress",
-                                    color = "#FFA500",
-                                    createdAt = Instant.now(),
-                                    updatedAt = Instant.now()
-                                ),
+                                status = UUID.randomUUID(),
                                 dueDate = Instant.now().plusSeconds(86400),
                                 createdAt = Instant.now(),
                                 updatedAt = Instant.now()
@@ -217,12 +194,11 @@ object TaskDocs {
             jsonBody<CreateTaskCommand> {
                 example("Create Task") {
                     value = CreateTaskCommand(
-                        number = "TASK-1",
                         name = "Implement authentication",
                         description = "Add JWT authentication to the backend",
                         priority = Priority.HIGH,
-                        linkId = UUID.randomUUID(),
                         userId = UUID.randomUUID(),
+                        hackathonId = UUID.randomUUID(),
                         dueDate = Instant.now().plusSeconds(86400)
                     )
                     description = "Create a new task with all required fields. Status will be set to Backlog by default."
@@ -233,9 +209,9 @@ object TaskDocs {
         response {
             HttpStatusCode.Created to {
                 description = "Task created successfully"
-                jsonBody<Task> {
+                jsonBody<TaskDto> {
                     example("Created Task") {
-                        value = Task(
+                        value = TaskDto(
                             id = UUID.randomUUID(),
                             number = "TASK-1",
                             name = "Implement authentication",
@@ -243,14 +219,8 @@ object TaskDocs {
                             priority = Priority.HIGH,
                             linkId = UUID.randomUUID(),
                             userId = UUID.randomUUID(),
-                            status = KanbanStatus(
-                                id = UUID.fromString("11111111-1111-1111-1111-111111111111"),
-                                nextId = UUID.fromString("22222222-2222-2222-2222-222222222222"),
-                                name = "Backlog",
-                                color = "#808080",
-                                createdAt = Instant.now(),
-                                updatedAt = Instant.now()
-                            ),
+                            status = UUID.randomUUID(),
+                            hackathonId = UUID.randomUUID(),
                             dueDate = Instant.now().plusSeconds(86400),
                             createdAt = Instant.now(),
                             updatedAt = Instant.now()
@@ -296,24 +266,18 @@ object TaskDocs {
         response {
             HttpStatusCode.OK to {
                 description = "Task updated successfully"
-                jsonBody<Task> {
+                jsonBody<TaskDto> {
                     example("Updated Task") {
-                        value = Task(
+                        value = TaskDto(
                             id = UUID.randomUUID(),
                             number = "TASK-1",
                             name = "Updated Task Name",
                             description = "Updated task description",
                             priority = Priority.MEDIUM,
                             linkId = UUID.randomUUID(),
+                            hackathonId = UUID.randomUUID(),
                             userId = UUID.randomUUID(),
-                            status = KanbanStatus(
-                                id = UUID.randomUUID(),
-                                nextId = null,
-                                name = "In Progress",
-                                color = "#FFA500",
-                                createdAt = Instant.now(),
-                                updatedAt = Instant.now()
-                            ),
+                            status = UUID.randomUUID(),
                             dueDate = Instant.now().plusSeconds(172800),
                             createdAt = Instant.now(),
                             updatedAt = Instant.now()

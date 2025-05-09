@@ -31,16 +31,21 @@ interface JdbiTaskRepository : TaskRepository {
     @SqlQuery("SELECT * FROM tasks WHERE status_id = :statusId")
     override fun getByStatusId(@Bind("statusId") statusId: UUID): List<Task>
 
+    @UseRowMapper(TaskMapper::class)
+    @SqlQuery("SELECT * FROM tasks WHERE hackathon_id = :hackathonId")
+    override fun getByHackathonId(@Bind("hackathonId") hackathonId: UUID): List<Task>
+
     @SqlUpdate("""
         INSERT INTO tasks (
             id, number, name, description, priority, link_id, user_id, 
-            status_id, due_date, created_at, updated_at
+            status_id, hackathon_id, due_date, created_at, updated_at
         ) VALUES (
             :id, :number, :name, :description, :priority, :linkId, :userId,
-            :status.id, :dueDate, :createdAt, :updatedAt
+            :status, :hackathonId, :dueDate, :createdAt, :updatedAt
         )
+        RETURNING serial
     """)
-    override fun insert(@BindBean task: Task)
+    override fun insert(@BindBean task: Task): Int
 
     @SqlUpdate("""
         UPDATE tasks SET
@@ -50,7 +55,8 @@ interface JdbiTaskRepository : TaskRepository {
             priority = :priority,
             link_id = :linkId,
             user_id = :userId,
-            status_id = :status.id,
+            status_id = :status,
+            hackathon_id = :hackathonId,
             due_date = :dueDate,
             updated_at = :updatedAt
         WHERE id = :id

@@ -34,7 +34,6 @@ object HackathonDocs {
                                 dateOfRegister = Instant.now(),
                                 dateOfStart = Instant.now().plusSeconds(86400),
                                 dateOfEnd = Instant.now().plusSeconds(259200),
-                                extraDestfine = "Additional information",
                                 name = "Hackathon 2024",
                                 createdAt = Instant.now(),
                                 updatedAt = Instant.now()
@@ -70,7 +69,6 @@ object HackathonDocs {
                             dateOfRegister = Instant.now(),
                             dateOfStart = Instant.now().plusSeconds(86400),
                             dateOfEnd = Instant.now().plusSeconds(259200),
-                            extraDestfine = "Additional information",
                             name = "Hackathon 2024",
                             createdAt = Instant.now(),
                             updatedAt = Instant.now()
@@ -102,8 +100,7 @@ object HackathonDocs {
                         description = "Annual coding competition",
                         dateOfRegister = Instant.now().toString(),
                         dateOfStart = Instant.now().plusSeconds(86400).toString(),
-                        dateOfEnd = Instant.now().plusSeconds(259200).toString(),
-                        extraDestfine = "Additional information"
+                        dateOfEnd = Instant.now().plusSeconds(259200).toString()
                     )
                     description = "Create a new hackathon with all required fields"
                 }
@@ -121,7 +118,6 @@ object HackathonDocs {
                             dateOfRegister = Instant.now(),
                             dateOfStart = Instant.now().plusSeconds(86400),
                             dateOfEnd = Instant.now().plusSeconds(259200),
-                            extraDestfine = "Additional information",
                             name = "Hackathon 2024",
                             createdAt = Instant.now(),
                             updatedAt = Instant.now()
@@ -154,8 +150,7 @@ object HackathonDocs {
                         description = "Updated description",
                         dateOfRegister = Instant.now().toString(),
                         dateOfStart = Instant.now().plusSeconds(86400).toString(),
-                        dateOfEnd = Instant.now().plusSeconds(259200).toString(),
-                        extraDestfine = "Updated additional information"
+                        dateOfEnd = Instant.now().plusSeconds(259200).toString()
                     )
                     description = "Update an existing hackathon with optional fields"
                 }
@@ -173,7 +168,6 @@ object HackathonDocs {
                             dateOfRegister = Instant.now(),
                             dateOfStart = Instant.now().plusSeconds(86400),
                             dateOfEnd = Instant.now().plusSeconds(259200),
-                            extraDestfine = "Updated additional information",
                             name = "Updated Hackathon Name",
                             createdAt = Instant.now(),
                             updatedAt = Instant.now()

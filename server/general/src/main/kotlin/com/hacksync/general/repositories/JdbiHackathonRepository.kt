@@ -10,6 +10,8 @@ import org.jdbi.v3.sqlobject.customizer.BindBean
 import org.jdbi.v3.sqlobject.statement.GetGeneratedKeys
 import org.jdbi.v3.sqlobject.statement.UseRowMapper
 import java.util.UUID
+import org.jdbi.v3.core.Jdbi
+import java.time.Instant
 
 interface JdbiHackathonRepository : HackathonRepository {
     @UseRowMapper(HackathonMapper::class)
@@ -20,10 +22,10 @@ interface JdbiHackathonRepository : HackathonRepository {
     @SqlQuery("SELECT * FROM hackathons WHERE id = :id")
     override fun getById(@Bind("id") id: UUID): Hackathon?
 
-    @SqlUpdate("INSERT INTO hackathons (id, name, description, date_of_register, date_of_start, date_of_end, extra_destfine) VALUES (:id, :name, :description, :dateOfRegister, :dateOfStart, :dateOfEnd, :extraDestfine) RETURNING *")
+    @SqlUpdate("INSERT INTO hackathons (id, name, description, date_of_register, date_of_start, date_of_end) VALUES (:id, :name, :description, :dateOfRegister, :dateOfStart, :dateOfEnd) RETURNING *")
     override fun insert(@BindBean hackathon: Hackathon)
 
-    @SqlUpdate("UPDATE hackathons SET name = :name, description = :description, date_of_register = :dateOfRegister, date_of_start = :dateOfStart, date_of_end = :dateOfEnd, extra_destfine = :extraDestfine WHERE id = :id")
+    @SqlUpdate("UPDATE hackathons SET name = :name, description = :description, date_of_register = :dateOfRegister, date_of_start = :dateOfStart, date_of_end = :dateOfEnd WHERE id = :id")
     override fun update(@BindBean hackathon: Hackathon)
 
     @SqlUpdate("DELETE FROM hackathons WHERE id = :id")

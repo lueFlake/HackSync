@@ -1,7 +1,9 @@
+import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { Button, Popconfirm, Space, Table } from 'antd';
+import moment from 'moment';
 import React from 'react';
-import { Table, Button, Popconfirm } from 'antd';
 
-const EventsTable = ({ events, onEdit, onDelete }) => {
+const EventsTable = ({ data, onEdit, onDelete }) => {
   const columns = [
     {
       title: 'Название',
@@ -9,43 +11,69 @@ const EventsTable = ({ events, onEdit, onDelete }) => {
       key: 'name',
     },
     {
-      title: 'Дата',
-      dataIndex: 'date',
-      key: 'date',
-      render: (date) => new Date(date).toLocaleString(),
+      title: 'Описание',
+      dataIndex: 'description',
+      key: 'description',
+      ellipsis: true,
+    },
+    {
+      title: 'Дата регистрации',
+      dataIndex: 'dateOfRegister',
+      key: 'dateOfRegister',
+      render: (date) => date ? moment(date).format('DD.MM.YYYY HH:mm') : '-',
+    },
+    {
+      title: 'Дата начала',
+      dataIndex: 'dateOfStart',
+      key: 'dateOfStart',
+      render: (date) => date ? moment(date).format('DD.MM.YYYY HH:mm') : '-',
+    },
+    {
+      title: 'Дата окончания',
+      dataIndex: 'dateOfEnd',
+      key: 'dateOfEnd',
+      render: (date) => date ? moment(date).format('DD.MM.YYYY HH:mm') : '-',
     },
     {
       title: 'Действия',
       key: 'actions',
+      width: 150,
+      align: 'center',
       render: (_, record) => (
-        <div className="table-actions">
-          <Button 
-            type="link" 
+        <Space size={4}>
+          <Button
+            type="primary"
+            size="small"
+            icon={<EditOutlined />}
             onClick={() => onEdit(record)}
-          >
-            Редактировать
-          </Button>
-          
+            style={{ background: '#b49a6a', border: 'none', padding: '0 6px' }}
+            title="Редактировать"
+          />
           <Popconfirm
-            title="Удалить событие?"
+            title="Вы уверены, что хотите удалить этот хакатон?"
             onConfirm={() => onDelete(record.id)}
             okText="Да"
             cancelText="Нет"
           >
-            <Button type="link" danger>
-              Удалить
-            </Button>
+            <Button
+              type="primary"
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              style={{ background: '#b49a6a', border: 'none', padding: '0 6px' }}
+              title="Удалить"
+            />
           </Popconfirm>
-        </div>
+        </Space>
       ),
     },
   ];
 
   return (
     <Table
-      rowKey="id"
-      dataSource={events}
       columns={columns}
+      dataSource={data}
+      rowKey="id"
       pagination={{ pageSize: 10 }}
     />
   );

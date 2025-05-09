@@ -5,13 +5,15 @@ import java.time.Instant
 import java.util.*
 
 data class Task(override val id: UUID,
+                val serial: Long,
                 val number: String,
                 val name: String,
                 val description: String,
                 val priority: Priority,
                 val linkId: UUID?,
                 val userId: UUID?,
-                val status: KanbanStatus?,
+                val status: UUID?,
+                val hackathonId: UUID?,
                 val dueDate: Instant?,
                 val createdAt: Instant,
                 val updatedAt: Instant
@@ -24,7 +26,8 @@ data class Task(override val id: UUID,
         priority = priority,
         linkId = linkId,
         userId = userId,
-        status = status?.toDto(),
+        status = status,
+        hackathonId = hackathonId,
         dueDate = dueDate,
         createdAt = createdAt,
         updatedAt = updatedAt

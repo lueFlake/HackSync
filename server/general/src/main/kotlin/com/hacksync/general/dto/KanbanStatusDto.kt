@@ -8,7 +8,7 @@ import java.util.UUID
 @Serializable
 data class KanbanStatusDto(
     @Contextual
-    override val id: UUID,
+    val id: UUID,
     @Contextual
     val nextId: UUID?,
     val name: String,

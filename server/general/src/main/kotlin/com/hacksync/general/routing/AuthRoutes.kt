@@ -5,6 +5,7 @@ import com.hacksync.general.dto.*
 import com.hacksync.general.services.AuthService
 import com.hacksync.general.services.UserService
 import com.hacksync.general.docs.AuthDocs
+import io.github.smiley4.ktoropenapi.config.RouteConfig
 import io.ktor.http.*
 import io.ktor.server.request.*
 import io.ktor.server.response.*
@@ -13,6 +14,7 @@ import org.koin.ktor.plugin.scope
 import io.github.smiley4.ktoropenapi.post
 import io.github.smiley4.ktoropenapi.get
 import io.ktor.server.sessions.*
+
 
 fun Route.authRoutes() {
     route("/auth") {
@@ -116,6 +118,34 @@ fun Route.authRoutes() {
             try {
                 authService.validateAccessToken(accessToken)
                 call.respond(HttpStatusCode.OK, mapOf("message" to "Token is valid"))
+            } catch (e: Exception) {
+                call.respond(HttpStatusCode.Unauthorized, mapOf("message" to "Invalid token"))
+            }
+        }
+
+        get("/me", AuthDocs.getCurrentUser) {
+            val authService = call.scope.get<AuthService>()
+            val userService = call.scope.get<UserService>()
+            
+            val accessToken = call.request.header("Authorization")?.removePrefix("Bearer ")
+                ?: return@get call.respond(HttpStatusCode.Unauthorized, "No access token provided")
+
+            try {
+                val email = authService.getEmailFromToken(accessToken)
+                val user = userService.getByEmail(ReadUserByEmailCommand(email))
+
+                call.respond(
+                    HttpStatusCode.OK,
+                    UserDto(
+                        id = user.id,
+                        email = user.email,
+                        name = user.name,
+                        role = user.role,
+                        avatarUrl = user.avatarUrl,
+                        createdAt = user.createdAt,
+                        updatedAt = user.updatedAt
+                    )
+                )
             } catch (e: Exception) {
                 call.respond(HttpStatusCode.Unauthorized, mapOf("message" to "Invalid token"))
             }

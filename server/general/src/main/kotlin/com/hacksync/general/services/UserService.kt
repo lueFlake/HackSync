@@ -7,12 +7,14 @@ import com.hacksync.general.entities.Link
 import com.hacksync.general.exceptions.ValidationException
 import com.hacksync.general.repositories.JdbiUserRepository
 import com.hacksync.general.repositories.JdbiLinkRepository
+import com.hacksync.general.repositories.UserRepository
+import com.hacksync.general.repositories.interfaces.LinkRepository
 import com.hacksync.general.utils.PasswordHashing
 import java.util.*
 
 class UserService(
-    private val userRepository: JdbiUserRepository,
-    private val linkRepository: JdbiLinkRepository
+    private val userRepository: UserRepository,
+    private val linkRepository: LinkRepository
 ) {
     suspend fun read(command: ReadUserCommand): User {
         return userRepository.getById(command.id)!!

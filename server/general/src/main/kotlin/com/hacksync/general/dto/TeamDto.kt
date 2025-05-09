@@ -7,7 +7,7 @@ import java.util.UUID
 @Serializable
 data class TeamDto(
     @Contextual
-    override val id: UUID,
+    val id: UUID,
     @Contextual
     val linkId: UUID?,
     val name: String?
