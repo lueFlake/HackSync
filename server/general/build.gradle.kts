@@ -14,8 +14,14 @@ application {
     applicationDefaultJvmArgs = listOf("-Dio.ktor.development=$isDevelopment")
 }
 
+// Add system properties for TLS
+System.setProperty("https.protocols", "TLSv1.2,TLSv1.3")
+System.setProperty("javax.net.ssl.trustStoreType", "JKS")
+
 repositories {
     mavenCentral()
+    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
+    maven("https://maven.pkg.jetbrains.space/public/p/ktor/eap")
     gradlePluginPortal()
     maven { url = uri("https://packages.confluent.io/maven/") }
     maven { url = uri("https://jitpack.io") }

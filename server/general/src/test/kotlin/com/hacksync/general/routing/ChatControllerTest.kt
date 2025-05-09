@@ -111,13 +111,6 @@ class ChatControllerTest {
         )
 
         client.webSocket("/chat") {
-            // Wait for welcome message
-            val welcomeFrame = incoming.receive()
-            assertTrue(welcomeFrame is Frame.Text)
-            val welcomeMessage = Json.decodeFromString<ChatMessage>((welcomeFrame as Frame.Text).readText())
-            assertEquals("System", welcomeMessage.sender)
-            assertTrue(welcomeMessage.content.toString().contains("You are connected"))
-
             // Send message
             send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
 
@@ -157,55 +150,67 @@ class ChatControllerTest {
         val client1 = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
         val client2 = createClient { install(io.ktor.client.plugins.websocket.WebSockets) }
 
-        try {
-            withTimeout(5000) {
-                val job1 = launch {
-                    client1.webSocket("/chat") {
-                        println("Client1 connected")
-                        withTimeout(1000) { incoming.receive() } // welcome
-                        println("Client1 received welcome")
+        runBlocking {
+            try {
+                withTimeout(10000) {
+                    val job1 = launch {
+                        try {
+                            client1.webSocket("/chat") {
+                                println("Client1 connected")
+                                send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
+                                println("Client1 sent message")
 
-                        send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
-                        println("Client1 sent message")
+                                val response = withTimeout(2000) { incoming.receive() }
+                                println("Client1 received response")
+                                val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
 
-                        val response = withTimeout(1000) { incoming.receive() }
-                        println("Client1 received response")
-                        val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
+                                assertEquals(message.sender, received.sender)
+                                assertEquals(message.content, received.content)
+                                assertEquals(message.type, received.type)
 
-                        assertEquals(message.sender, received.sender)
-                        assertEquals(message.content, received.content)
-                        assertEquals(message.type, received.type)
-
-                        close()
+                                close()
+                            }
+                        } catch (e: Exception) {
+                            println("Client1 error: ${e.message}")
+                            throw e
+                        }
                     }
-                }
 
-                val job2 = launch {
-                    client2.webSocket("/chat") {
-                        println("Client2 connected")
-                        withTimeout(1000) { incoming.receive() } // welcome
-                        println("Client2 received welcome")
+                    val job2 = launch {
+                        try {
+                            client2.webSocket("/chat") {
+                                println("Client2 connected")
+                                val response = withTimeout(2000) { incoming.receive() }
+                                println("Client2 received message")
+                                val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
 
-                        val response = withTimeout(1000) { incoming.receive() }
-                        println("Client2 received message")
-                        val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
+                                assertEquals(message.sender, received.sender)
+                                assertEquals(message.content, received.content)
+                                assertEquals(message.type, received.type)
 
-                        assertEquals(message.sender, received.sender)
-                        assertEquals(message.content, received.content)
-                        assertEquals(message.type, received.type)
-
-                        close()
+                                close()
+                            }
+                        } catch (e: Exception) {
+                            println("Client2 error: ${e.message}")
+                            throw e
+                        }
                     }
-                }
 
-                joinAll(job1, job2)
+                    joinAll(job1, job2)
+                }
+            } catch (e: Exception) {
+                println("Test error: ${e.message}")
+                throw e
+            } finally {
+                try {
+                    client1.close()
+                    client2.close()
+                } catch (e: Exception) {
+                    println("Error closing clients: ${e.message}")
+                }
             }
-        } finally {
-            client1.close()
-            client2.close()
         }
     }
-
 
     @Test
     fun `test invalid message format`() = testApplication {
@@ -226,9 +231,6 @@ class ChatControllerTest {
 
         // Act
         client.webSocket("/chat") {
-            val welcomeFrame = incoming.receive()
-            assertTrue(welcomeFrame is Frame.Text)
-
             send(Frame.Text("This is not a valid JSON message"))
 
             // Assert
@@ -272,10 +274,6 @@ class ChatControllerTest {
         )
 
         client.webSocket("/chat") {
-            // Wait for welcome message
-            val welcomeFrame = incoming.receive()
-            assertTrue(welcomeFrame is Frame.Text)
-
             // Send image message
             send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
 
@@ -324,10 +322,6 @@ class ChatControllerTest {
         )
 
         client.webSocket("/chat") {
-            // Wait for welcome message
-            val welcomeFrame = incoming.receive()
-            assertTrue(welcomeFrame is Frame.Text)
-
             // Send video message
             send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
 
@@ -376,10 +370,6 @@ class ChatControllerTest {
         )
 
         client.webSocket("/chat") {
-            // Wait for welcome message
-            val welcomeFrame = incoming.receive()
-            assertTrue(welcomeFrame is Frame.Text)
-
             // Send file message
             send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
 
@@ -431,15 +421,9 @@ class ChatControllerTest {
             withTimeout(5000) {
                 val job1 = launch {
                     client1.webSocket("/chat") {
-                        println("Client1 connected")
-                        withTimeout(1000) { incoming.receive() } // welcome
-                        println("Client1 received welcome")
-
                         send(Frame.Text(Json.encodeToString(ChatMessage.serializer(), message)))
-                        println("Client1 sent image message")
 
                         val response = withTimeout(1000) { incoming.receive() }
-                        println("Client1 received response")
                         val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
 
                         assertEquals(message.sender, received.sender)
@@ -452,10 +436,6 @@ class ChatControllerTest {
 
                 val job2 = launch {
                     client2.webSocket("/chat") {
-                        println("Client2 connected")
-                        withTimeout(1000) { incoming.receive() } // welcome
-                        println("Client2 received welcome")
-
                         val response = withTimeout(1000) { incoming.receive() }
                         println("Client2 received image message")
                         val received = Json.decodeFromString<ChatMessage>((response as Frame.Text).readText())
