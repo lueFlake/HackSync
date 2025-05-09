@@ -8,6 +8,9 @@ COPY gradlew .
 COPY build.gradle.kts .
 COPY settings.gradle.kts .
 
+# Make gradlew executable
+RUN chmod +x ./gradlew
+
 # Add Kotlin plugin repository
 RUN echo 'pluginManagement { repositories { gradlePluginPortal(); maven("https://plugins.gradle.org/m2/"); maven("https://maven.pkg.jetbrains.space/public/p/kotlinx-html/maven") } }' >> settings.gradle.kts
 
