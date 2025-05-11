@@ -1,14 +1,23 @@
-import { DeleteOutlined, EditOutlined } from '@ant-design/icons';
+import { CheckOutlined, DeleteOutlined, EditOutlined } from '@ant-design/icons';
 import { Button, Popconfirm, Space, Table } from 'antd';
 import moment from 'moment';
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useSelectedHackathon } from '../hooks/useSelectedHackathon';
+import './EventsTable.css';
 
 const EventsTable = ({ data, onEdit, onDelete }) => {
+  const navigate = useNavigate();
+  const { selectedHackathon, setSelectedHackathonId } = useSelectedHackathon();
+
   const columns = [
     {
       title: 'Название',
       dataIndex: 'name',
       key: 'name',
+      render: (text, record) => (
+        <a onClick={() => navigate(`/events/${record.id}`)}>{text}</a>
+      ),
     },
     {
       title: 'Описание',
@@ -37,7 +46,7 @@ const EventsTable = ({ data, onEdit, onDelete }) => {
     {
       title: 'Действия',
       key: 'actions',
-      width: 150,
+      width: 200,
       align: 'center',
       render: (_, record) => (
         <Space size={4}>
@@ -48,6 +57,18 @@ const EventsTable = ({ data, onEdit, onDelete }) => {
             onClick={() => onEdit(record)}
             style={{ background: '#b49a6a', border: 'none', padding: '0 6px' }}
             title="Редактировать"
+          />
+          <Button
+            type="primary"
+            size="small"
+            icon={<CheckOutlined />}
+            onClick={() => setSelectedHackathonId(record.id)}
+            style={{ 
+              background: selectedHackathon?.id === record.id ? '#52c41a' : '#b49a6a', 
+              border: 'none', 
+              padding: '0 6px' 
+            }}
+            title="Выбрать"
           />
           <Popconfirm
             title="Вы уверены, что хотите удалить этот хакатон?"
@@ -75,6 +96,7 @@ const EventsTable = ({ data, onEdit, onDelete }) => {
       dataSource={data}
       rowKey="id"
       pagination={{ pageSize: 10 }}
+      rowClassName={(record) => record.id === selectedHackathon?.id ? 'selected-row' : ''}
     />
   );
 };

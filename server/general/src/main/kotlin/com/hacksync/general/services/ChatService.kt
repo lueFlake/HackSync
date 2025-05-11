@@ -8,46 +8,26 @@ import com.hacksync.general.routing.Connection
 import io.ktor.websocket.*
 import kotlinx.serialization.json.*
 import org.slf4j.LoggerFactory
+import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 
 private val logger = LoggerFactory.getLogger("ChatService")
 
 class ChatService(private val messageRepository: MessageRepository) {
-    private val connections = ConcurrentHashMap<String, Connection>()
+    private val connections = ConcurrentHashMap<UUID, MutableSet<Connection>>()
 
-    suspend fun addConnection(connection: Connection) {
-        connections[connection.name] = connection
-        logger.info("New connection added: ${connection.name}")
-        /*connection.session.send(Json.encodeToString(
-            ChatMessage.serializer(),
-            ChatMessage(
-                sender = "System",
-                content = JsonPrimitive("You are connected! There are ${connections.size} users here."),
-                timestamp = System.currentTimeMillis(),
-                type = MessageType.TEXT
-            )
-        ))*/
+    fun addConnection(connection: Connection) {
+        connections.computeIfAbsent(connection.hackathonId) { mutableSetOf() }.add(connection)
+        logger.info("New connection added for hackathon ${connection.hackathonId}. Total connections: ${connections[connection.hackathonId]?.size}")
     }
 
     fun removeConnection(connection: Connection) {
-        connections.remove(connection.name)
-        logger.info("Connection removed: ${connection.name}")
+        connections[connection.hackathonId]?.remove(connection)
+        logger.info("Connection removed for hackathon ${connection.hackathonId}. Remaining connections: ${connections[connection.hackathonId]?.size}")
     }
 
-    suspend fun broadcastMessage(message: ChatMessage) {
-        val messageJson = Json.encodeToString(ChatMessage.serializer(), message)
-        connections.values.forEach { connection ->
-            try {
-                connection.session.send(messageJson)
-            } catch (e: Exception) {
-                logger.error("Error sending message to ${connection.name}: ${e.message}")
-                removeConnection(connection)
-            }
-        }
-    }
-
-    fun processMessage(json: String): ChatMessage {
-        val jsonElement = Json.parseToJsonElement(json)
+    fun processMessage(text: String, hackathonId: UUID): ChatMessage {
+        val jsonElement = Json.parseToJsonElement(text)
         val message = when {
             jsonElement is JsonObject && jsonElement.containsKey("type") -> {
                 val type = jsonElement["type"]?.jsonPrimitive?.content
@@ -62,7 +42,8 @@ class ChatService(private val messageRepository: MessageRepository) {
                             sender = jsonElement["sender"]?.jsonPrimitive?.content ?: "Unknown",
                             content = Json.encodeToJsonElement(content),
                             timestamp = System.currentTimeMillis(),
-                            type = MessageType.valueOf(type)
+                            type = MessageType.valueOf(type),
+                            hackathonId = hackathonId.toString()
                         )
                     }
                     else -> throw IllegalArgumentException("Unsupported message type: $type")
@@ -83,7 +64,7 @@ class ChatService(private val messageRepository: MessageRepository) {
                     throw IllegalArgumentException("Media messages must have MediaContent object")
                 }
                 val mediaContent = Json.decodeFromJsonElement<MediaContent>(message.content as JsonObject)
-                validateMediaContent(mediaContent)
+                //validateMediaContent(mediaContent)
             }
         }
 
@@ -91,10 +72,24 @@ class ChatService(private val messageRepository: MessageRepository) {
         return message
     }
 
-    fun getMessageHistory(): List<ChatMessage> = messageRepository.getAll()
+    suspend fun broadcastMessage(message: ChatMessage, hackathonId: UUID) {
+        val messageJson = Json.encodeToString(ChatMessage.serializer(), message)
+        connections[hackathonId]?.forEach { connection ->
+            try {
+                connection.session.send(messageJson)
+            } catch (e: Exception) {
+                logger.error("Error sending message to ${connection.name}: ${e.message}")
+                removeConnection(connection)
+            }
+        }
+    }
+
+    fun getMessageHistory(hackathonId: UUID): List<ChatMessage> {
+        return messageRepository.findByHackathonId(hackathonId)
+    }
 
     private fun validateMediaContent(mediaContent: MediaContent) {
-        /*when (getMessageTypeFromMime(mediaContent.mimeType)) {
+        when (getMessageTypeFromMime(mediaContent.mimeType)) {
             MessageType.IMAGE -> {
                 if (!isValidImageUrl(mediaContent.url)) {
                     throw IllegalArgumentException("Invalid image URL format")
@@ -112,11 +107,11 @@ class ChatService(private val messageRepository: MessageRepository) {
             }
             MessageType.FILE -> {
                 if (!isValidFileUrl(mediaContent.url)) {
-                    throw IllegalArgumentException("Invalid file URL format")
+                    throw IllegalArgumentException("Invalid file URL format: ${mediaContent.url}")
                 }
             }
             else -> throw IllegalArgumentException("Unsupported media type: ${mediaContent.mimeType}")
-        }*/
+        }
     }
 
     private fun getMessageTypeFromMime(mimeType: String): MessageType = when {
@@ -125,7 +120,6 @@ class ChatService(private val messageRepository: MessageRepository) {
         mimeType.startsWith("audio/") -> MessageType.AUDIO
         else -> MessageType.FILE
     }
-
 
     private fun isValidImageUrl(url: String): Boolean {
         return url.startsWith("http://") || url.startsWith("https://") ||

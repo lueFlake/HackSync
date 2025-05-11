@@ -17,8 +17,8 @@ export const useApi = () => {
         return { data: response };
     }, []);
 
-    const del = useCallback(async (endpoint) => {
-        const response = await ApiService.request(endpoint, 'DELETE', null, true, ApiService.DEFAULT_TIMEOUT);
+    const del = useCallback(async (endpoint, options = {}) => {
+        const response = await ApiService.request(endpoint, 'DELETE', null, true, ApiService.DEFAULT_TIMEOUT, false, null, options.skipJsonParse);
         return { data: response };
     }, []);
 

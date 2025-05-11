@@ -1,18 +1,19 @@
+import { styled } from '@mui/material';
 import moment from 'moment';
 import React, { useState } from 'react';
 import { Navigate, Route, BrowserRouter as Router, Routes, useLocation } from 'react-router-dom';
 import Menu from './components/Menu';
 import TopBar from './components/TopBar';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { useAuth } from './contexts/AuthContext';
 import BoardPage from './pages/BoardPage.jsx';
 import CalendarPage from './pages/CalendarPage';
 import ChatPage from './pages/ChatPage';
+import EventDetailsPage from './pages/EventDetailsPage';
 import EventsPage from './pages/EventsPage';
 import LoginPage from './pages/LoginPage';
 import MyTasksPage from './pages/MyTasksPage';
 import ProfilePage from './pages/ProfilePage';
 import TaskPage from './pages/TaskPage';
-import { styled } from '@mui/material';
 
 const AppContainer = styled('div')({
   display: 'flex',
@@ -64,6 +65,12 @@ function AppContent() {
               <Route path="/" element={
                 <PrivateRoute>
                   <EventsPage setSelectedEvent={setSelectedEvent} />
+                </PrivateRoute>
+              } />
+  
+              <Route path="/events/:id" element={
+                <PrivateRoute>
+                  <EventDetailsPage />
                 </PrivateRoute>
               } />
   

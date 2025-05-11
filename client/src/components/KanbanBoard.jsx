@@ -13,10 +13,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { Avatar, Card, Tag, message } from "antd";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiService } from "../services/ApiService";
 import { Column, Task } from "./Kanban/KanbanComponents";
-
 
 const KanbanBoard = () => {
   const [columns, setColumns] = useState([]);
@@ -65,7 +64,7 @@ const KanbanBoard = () => {
         }));
 
         // Sort tasks by number in each column
-        updatedColumns.forEach(col => {
+        updatedColumns.forEach((col) => {
           col.tasks.sort((a, b) => a.number.localeCompare(b.number));
         });
 
@@ -81,19 +80,22 @@ const KanbanBoard = () => {
   }, []);
 
   const findColumn = (taskNumber) => {
-    return columns.find((col) => col.tasks.some((task) => task.number === taskNumber))
-      ?.id;
+    return columns.find((col) =>
+      col.tasks.some((task) => task.number === taskNumber)
+    )?.id;
   };
 
   const handleDragStart = ({ active }) => {
     // Check if the dragged item is a column
-    const isColumn = columns.some(col => col.id === active.id);
+    const isColumn = columns.some((col) => col.id === active.id);
     if (isColumn) {
       return;
     }
 
     setActiveTask(
-      columns.flatMap((col) => col.tasks).find((task) => task.number === active.id)
+      columns
+        .flatMap((col) => col.tasks)
+        .find((task) => task.number === active.id)
     );
   };
 
@@ -110,7 +112,10 @@ const KanbanBoard = () => {
     setColumns((prev) =>
       prev.map((col) => {
         if (col.id === activeCol) {
-          return { ...col, tasks: col.tasks.filter((t) => t.number !== activeNumber) };
+          return {
+            ...col,
+            tasks: col.tasks.filter((t) => t.number !== activeNumber),
+          };
         }
         if (col.id === overCol) {
           return { ...col, tasks: [activeTask, ...col.tasks] };
@@ -118,7 +123,7 @@ const KanbanBoard = () => {
         return col;
       })
     );
-  };  
+  };
 
   const handleDragEnd = async ({ active, over }) => {
     if (!over) return;
@@ -133,7 +138,7 @@ const KanbanBoard = () => {
       .find((task) => task.number === taskNumber);
 
     // Find the target status from our statuses list
-    const targetStatus = statuses.find(s => s.id === overCol);
+    const targetStatus = statuses.find((s) => s.id === overCol);
     if (!targetStatus) {
       message.error("Статус не найден");
       return;
@@ -206,7 +211,7 @@ const KanbanBoard = () => {
             }
           >
             <SortableContext
-              items={column.tasks.map(task => task.number)}
+              items={column.tasks.map((task) => task.number)}
               strategy={verticalListSortingStrategy}
             >
               {column.tasks.map((task) => (

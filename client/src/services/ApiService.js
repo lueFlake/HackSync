@@ -64,7 +64,8 @@ export class ApiService {
    * @param {boolean} useCache - Использовать кэш
    * @param {number|null} cacheDuration - Длительность кэша в миллисекундах
    */
-  static async request(endpoint, method = "GET", body = null, retry = true, timeoutMs = null, useCache = false, cacheDuration = null) {
+  static async request(endpoint, method = "GET", body = null, retry = true, timeoutMs = null, useCache = false, cacheDuration = null, skipJsonParse = false) {
+    // Check cache for GET requests
     if (useCache && method === "GET") {
       const cacheKey = `${endpoint}${body ? JSON.stringify(body) : ''}`;
       const cachedData = this._getCachedData(cacheKey);
@@ -78,9 +79,12 @@ export class ApiService {
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const headers = {
-        "Content-Type": "application/json",
-      };
+      const headers = {};
+
+      // Only set Content-Type for non-FormData requests
+      if (!(body instanceof FormData)) {
+        headers["Content-Type"] = "application/json";
+      }
 
       const accessToken = localStorage.getItem("accessToken");
       if (accessToken) {
@@ -90,7 +94,7 @@ export class ApiService {
       const response = await fetch(`${ApiService.BASE_URL}${endpoint}`, {
         method,
         headers,
-        body: body ? JSON.stringify(body) : null,
+        body: body instanceof FormData ? body : (body ? JSON.stringify(body) : null),
         credentials: 'include',
         signal: controller.signal
       });
@@ -102,6 +106,16 @@ export class ApiService {
           return this._handleUnauthorized(endpoint, method, body, timeoutMs);
         }
         throw await this._parseError(response);
+      }
+
+      // Return null for 204 No Content responses
+      if (response.status === 204) {
+        return null;
+      }
+
+      // Skip JSON parsing if requested
+      if (skipJsonParse) {
+        return null;
       }
 
       const data = await response.json();

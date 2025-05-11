@@ -1,28 +1,30 @@
 import {
-  Button,
-  DatePicker,
-  Divider,
-  Form,
-  Input,
-  notification,
-  Select,
-  Spin,
+    Button,
+    DatePicker,
+    Divider,
+    Form,
+    Input,
+    notification,
+    Select,
+    Spin,
 } from "antd";
 import { useEffect, useState } from "react";
 import MyTasksTable from "../components/MyTasksTable";
 import PageContainer from "../components/PageContainer";
 import { useAuth } from "../contexts/AuthContext";
+import { useSelectedHackathon } from '../hooks/useSelectedHackathon';
 import { ApiService } from "../services/ApiService";
 
 const { Option } = Select;
 
-const MyTasksPage = ({ event }) => {
+const MyTasksPage = () => {
   const [tasks, setTasks] = useState([]);
   const [kanbanStatuses, setKanbanStatuses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [form] = Form.useForm();
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { selectedHackathon } = useSelectedHackathon();
 
   useEffect(() => {
     const fetchTasksAndStatuses = async () => {
@@ -116,7 +118,7 @@ const MyTasksPage = ({ event }) => {
   };
 
   return (
-    <PageContainer title={`Мои задачи: ${event?.name || "Текущий проект"}`}>
+    <PageContainer title={selectedHackathon ? `Мои задачи - ${selectedHackathon.name}` : "Мои задачи"}>
       <Divider orientation="left" />
       <Button
         type="primary"

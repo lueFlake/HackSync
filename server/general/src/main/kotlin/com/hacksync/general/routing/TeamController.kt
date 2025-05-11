@@ -66,8 +66,11 @@ fun Route.teamRoutes() {
                 ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid team ID format")
             val userId = UUID.fromString(call.parameters["userId"])
                 ?: return@post call.respond(HttpStatusCode.BadRequest, "Invalid user ID format")
+            
+            val requestBody = call.receive<Map<String, String>>()
+            val role = requestBody["role"] ?: "PARTICIPANT"
 
-            teamService.addUser(AddUserToTeamCommand(teamId, userId))
+            teamService.addUser(AddUserToTeamCommand(teamId, userId, role))
             call.respond(HttpStatusCode.OK)
         }
 

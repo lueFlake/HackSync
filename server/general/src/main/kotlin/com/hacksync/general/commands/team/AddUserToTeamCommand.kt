@@ -9,5 +9,6 @@ data class AddUserToTeamCommand(
     @Contextual
     val teamId: UUID,
     @Contextual
-    val userId: UUID
+    val userId: UUID,
+    val role: String = "PARTICIPANT" // Default role for joining users
 ) 

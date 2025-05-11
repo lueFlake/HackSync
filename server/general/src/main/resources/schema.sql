@@ -33,6 +33,7 @@ CREATE TABLE teams (
 CREATE TABLE user_teams (
     user_id UUID REFERENCES users(id),
     team_id UUID REFERENCES teams(id),
+    role VARCHAR(20) NOT NULL DEFAULT 'PARTICIPANT',
     PRIMARY KEY (user_id, team_id)
 );
 

@@ -79,7 +79,7 @@ class TeamService(
 
     // User management methods
     suspend fun addUser(command: AddUserToTeamCommand) {
-        userTeamRepo.insert(UserTeam(command.userId, command.teamId))
+        userTeamRepo.insert(UserTeam(command.userId, command.teamId, command.role))
     }
 
     suspend fun removeUser(command: RemoveUserFromTeamCommand) {

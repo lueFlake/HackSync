@@ -7,32 +7,16 @@ import {
   FileTextOutlined, // PDF
   FileWordOutlined,
   PaperClipOutlined,
-  SendOutlined,
+  SendOutlined
 } from "@ant-design/icons";
-import { Box, List, Paper, TextField, Typography } from "@mui/material";
+import { Box, TextField, Typography } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import { Button } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useApi } from "../../hooks/useApi";
+import { useSelectedHackathon } from "../../hooks/useSelectedHackathon";
 import { ApiService } from "../../services/ApiService";
-
-const ChatContainer = styled(Paper)(({ theme }) => ({
-  padding: theme.spacing(2),
-  height: "600px",
-  display: "flex",
-  flexDirection: "column",
-}));
-
-const MessageList = styled(List)({
-  flex: 1,
-  overflow: "auto",
-  marginBottom: "16px",
-});
-
-const MessageInput = styled(Box)({
-  display: "flex",
-  gap: "8px",
-});
 
 const MessageBubble = styled(({ isOwn, ...other }) => <Box {...other} />)(
   ({ theme, isOwn }) => ({
@@ -132,11 +116,16 @@ const FileIcon = ({ mimeType }) => {
 const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [connected, setConnected] = useState(false);
-  const [ws, setWs] = useState(null);
+  const [socket, setSocket] = useState(null);
+  const [isConnected, setIsConnected] = useState(false);
+  const [reconnectAttempt, setReconnectAttempt] = useState(0);
+  const messageQueue = useRef([]);
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
   const { user, isLoading, isAuthenticated } = useAuth();
+  const { selectedHackathon } = useSelectedHackathon();
+  const api = useApi();
 
   const formatFileSize = (bytes) => {
     if (bytes === 0) return "0 Bytes";
@@ -161,246 +150,394 @@ const Chat = () => {
     return typeMap[subtype] || subtype?.toUpperCase() || "FILE";
   };
 
-  useEffect(() => {
-    const fetchHistory = async () => {
-      try {
-        const history = await ApiService.chatHistory();
-        setMessages(history);
-      } catch (error) {
-        console.error("Error fetching chat history:", error);
-      }
-    };
-
-    fetchHistory();
-  }, []);
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
 
   useEffect(() => {
-    const websocket = new WebSocket(
-      `ws://${ApiService.BASE_URL.replace("http://", "").replace(
-        "https://",
-        ""
-      )}/chat`
-    );
-
-    websocket.onopen = () => {
-      setConnected(true);
-    };
-
-    websocket.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data);
-        setMessages((prev) => [...prev, message]);
-      } catch (e) {
-        const textMessage = {
-          sender: "System",
-          content: event.data,
-          timestamp: Date.now(),
-          type: "TEXT",
-        };
-        setMessages((prev) => [...prev, textMessage]);
-      }
-    };
-
-    websocket.onclose = () => setConnected(false);
-    websocket.onerror = () => setConnected(false);
-
-    setWs(websocket);
-
-    return () => websocket.close();
-  }, []);
-
-  useEffect(() => {
-    if (messagesEndRef.current) {
-      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
+    scrollToBottom();
   }, [messages]);
 
+  const processMessageQueue = () => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      while (messageQueue.current.length > 0) {
+        const message = messageQueue.current.shift();
+        socket.send(JSON.stringify(message));
+      }
+    }
+  };
+
+  const queueMessage = (message) => {
+    messageQueue.current.push(message);
+    if (isConnected) {
+      processMessageQueue();
+    }
+  };
+
   const handleSendMessage = () => {
-    if (!connected || !newMessage.trim() || !ws) return;
+    if (!newMessage.trim() || !selectedHackathon) return;
 
     const message = {
       sender: user.name,
       content: newMessage,
       timestamp: Date.now(),
       type: "TEXT",
+      hackathonId: selectedHackathon.id
     };
 
-    ws.send(JSON.stringify(message));
-    setNewMessage("");
+    // Add message to local state immediately
+    setMessages(prev => [...prev, message]);
+    
+    // Send through WebSocket
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message));
+    } else {
+      queueMessage(message);
+    }
+    
+    setNewMessage('');
   };
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files[0];
+  const handleFileUpload = async (event) => {
+    if (!selectedHackathon) return;
+
+    const file = event.target.files[0];
     if (!file) return;
-    e.target.value = "";
 
     const formData = new FormData();
-    formData.append("file", file);
-
-    console.log(formData);
+    formData.append('file', file);
 
     try {
-      const res = await fetch(`${ApiService.BASE_URL}/chat/upload`, {
-        method: "POST",
-        body: formData,
-      });
-      const data = await res.json();
+      const response = await api.post(`/chat/upload/${selectedHackathon.id}`, formData);
 
-      const message = {
-        sender: user.name,
-        content: {
-          url: data.url,
-          mimeType: file.type,
-          fileName: file.name,
-          fileSize: file.size,
-        },
-        timestamp: Date.now(),
-        type: file.type.startsWith("image/") ? "IMAGE" : "FILE",
-      };
+      if (response.data && response.data.url) {
+        const message = {
+          sender: user.name,
+          content: {
+            url: response.data.url,
+            fileName: response.data.fileName,
+            mimeType: file.type,
+            fileSize: file.size
+          },
+          timestamp: Date.now(),
+          type: "FILE",
+          hackathonId: selectedHackathon.id
+        };
 
-      ws.send(JSON.stringify(message));
-    } catch (err) {
-      console.error("Upload failed", err);
+        // Add message to local state
+        setMessages(prev => [...prev, message]);
+        
+        // Send through WebSocket
+        if (socket && socket.readyState === WebSocket.OPEN) {
+          socket.send(JSON.stringify(message));
+        } else {
+          queueMessage(message);
+        }
+      } else {
+        console.error('Invalid response from file upload');
+      }
+    } catch (error) {
+      console.error('Failed to upload file:', error);
     }
   };
+
+  const connectWebSocket = () => {
+    if (!selectedHackathon) return;
+
+    try {
+      console.log(`Attempting to connect (attempt ${reconnectAttempt + 1})`);
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+      const wsUrl = `${protocol}//localhost:8080/chat/${selectedHackathon.id}`;
+      console.log('Connecting to WebSocket URL:', wsUrl);
+      
+      const ws = new WebSocket(wsUrl);
+      
+      ws.onopen = () => {
+        console.log('WebSocket connection established successfully');
+        setIsConnected(true);
+        setReconnectAttempt(0);
+        processMessageQueue();
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          console.log('Received message:', event.data);
+          const message = JSON.parse(event.data);
+          // Only add message if it's from another user
+          if (message.sender !== user.name) {
+          setMessages(prev => [...prev, message]);
+          }
+        } catch (error) {
+          console.error('Failed to parse message:', error);
+        }
+      };
+
+      ws.onerror = (error) => {
+        console.error('WebSocket error:', error);
+        setIsConnected(false);
+        ws.close();
+      };
+
+      ws.onclose = (event) => {
+        console.log('WebSocket connection closed:', {
+          code: event.code,
+          reason: event.reason,
+          wasClean: event.wasClean
+        });
+        setIsConnected(false);
+        if (event.code !== 1000) { // Don't reconnect if closed normally
+          scheduleReconnect();
+        }
+      };
+
+      setSocket(ws);
+    } catch (error) {
+      console.error('Failed to create WebSocket:', error);
+      scheduleReconnect();
+    }
+  };
+
+  const scheduleReconnect = () => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+    }
+
+    const maxAttempts = 5;
+    const baseDelay = 1000; // 1 second
+    const maxDelay = 30000; // 30 seconds
+
+    if (reconnectAttempt < maxAttempts) {
+      const delay = Math.min(baseDelay * Math.pow(2, reconnectAttempt), maxDelay);
+      console.log(`Scheduling reconnect in ${delay}ms (attempt ${reconnectAttempt + 1})`);
+      reconnectTimeoutRef.current = setTimeout(() => {
+        setReconnectAttempt(prev => prev + 1);
+        connectWebSocket();
+      }, delay);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedHackathon) {
+      setMessages([]);
+      setIsConnected(false);
+      setReconnectAttempt(0);
+      if (socket) {
+        socket.close(1000, "Hackathon changed");
+        setSocket(null);
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+      return;
+    }
+
+    // Load message history
+    const loadHistory = async () => {
+      try {
+        const response = await api.get(`/chat/history/${selectedHackathon.id}`);
+        setMessages(response.data);
+      } catch (error) {
+        console.error('Failed to load chat history:', error);
+      }
+    };
+
+    loadHistory();
+    connectWebSocket();
+
+    return () => {
+      if (socket) {
+        socket.close(1000, "Component unmounted");
+      }
+      if (reconnectTimeoutRef.current) {
+        clearTimeout(reconnectTimeoutRef.current);
+      }
+    };
+  }, [selectedHackathon]);
 
   if (isLoading) return <div>Loading...</div>;
   if (!isAuthenticated) return <div>Please log in</div>;
 
-  return (
-    <ChatContainer elevation={3} sx={{ m: 0.5 }}>
-      <MessageList>
-        {messages.map((message, index) => {
-          const isOwn = message.sender === user.name;
-          return (
-            <Box
-              key={index}
-              display="flex"
-              justifyContent={isOwn ? "flex-end" : "flex-start"}
-            >
-              <MessageBubble isOwn={isOwn}>
-                {message.type === "IMAGE" ? (
-                  <a
-                    href={`${ApiService.BASE_URL}${message.content.url}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: "block" }}
-                  >
-                    <img
-                      src={`${ApiService.BASE_URL}${message.content.url}`}
-                      alt={message.content.fileName || "Uploaded image"}
-                      style={{
-                        maxWidth: "100%",
-                        maxHeight: "200px",
-                        borderRadius: "8px",
-                        objectFit: "cover",
-                        cursor: "pointer",
-                      }}
-                    />
-                  </a>
-                ) : message.type === "FILE" ? (
-                  <a
-                    href={message.content}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    {message.fileName}
-                  </a>
-                ) : (
-                  <Typography variant="body2">{message.content}</Typography>
-                )}
-                {message.type === "FILE" && (
-                  <div style={{ marginTop: 4 }}>
-                    {/* File name row */}
-                    <div
-                      style={{ display: "flex", alignItems: "center", gap: 8 }}
-                    >
-                      <FileIcon mimeType={message.content.mimeType} />
-                      <a
-                        href={`${ApiService.BASE_URL}/${message.content.url}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        style={{
-                          fontWeight: 500,
-                          color: "inherit",
-                          textDecoration: "none",
-                          "&:hover": { textDecoration: "underline" },
-                        }}
-                      >
-                        {message.content.fileName}
-                      </a>
-                    </div>
+  if (!selectedHackathon) {
+    return (
+      <Box sx={{ textAlign: 'center', mt: 4 }}>
+        <Typography variant="h6" color="text.secondary">
+          Выберите хакатон для просмотра чата
+        </Typography>
+      </Box>
+    );
+  }
 
-                    {/* Meta info row */}
-                    <div
+  return (
+    <Box sx={{ height: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+      {!isConnected && selectedHackathon && reconnectAttempt < 5 && (
+        <Box sx={{ p: 1, bgcolor: 'warning.light', color: 'warning.contrastText', textAlign: 'center' }}>
+          <Typography variant="body2">
+            Reconnecting to chat... (Attempt {reconnectAttempt + 1}/5)
+          </Typography>
+        </Box>
+      )}
+      {!isConnected && selectedHackathon && reconnectAttempt >= 5 && (
+        <Box sx={{ p: 1, bgcolor: 'error.light', color: 'error.contrastText', textAlign: 'center' }}>
+          <Typography variant="body2">
+            Failed to connect to chat. Please refresh the page.
+          </Typography>
+        </Box>
+      )}
+      <Box sx={{ flexGrow: 1, overflow: 'auto', mb: 2, p: 2, bgcolor: 'background.paper', borderRadius: 1 }}>
+        {messages.map((message, index) => (
+          <Box
+            key={index}
+            sx={{
+              mb: 2,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: message.sender === user.name ? 'flex-end' : 'flex-start',
+            }}
+          >
+            <Typography variant="caption" color="text.secondary">
+              {message.sender}
+            </Typography>
+            <MessageBubble isOwn={message.sender === user.name}>
+              {message.type === "FILE" && message.content.mimeType?.startsWith('image/') ? (
+                <a
+                  href={`${ApiService.BASE_URL}${message.content.url}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ display: "block" }}
+                >
+                  <img
+                    src={`${ApiService.BASE_URL}${message.content.url}`}
+                    alt={message.content.fileName || "Uploaded image"}
+                    style={{
+                      maxWidth: "100%",
+                      maxHeight: "200px",
+                      borderRadius: "8px",
+                      objectFit: "cover",
+                      cursor: "pointer",
+                    }}
+                  />
+                </a>
+              ) : message.type === "FILE" ? (
+                <div style={{ marginTop: 4 }}>
+                  {/* File name row */}
+                  <div
+                    style={{ display: "flex", alignItems: "center", gap: 8 }}
+                  >
+                    <FileIcon mimeType={message.content.mimeType} />
+                    <a
+                      href={`${ApiService.BASE_URL}${message.content.url}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       style={{
-                        display: "flex",
-                        gap: 12,
-                        fontSize: 12,
-                        color: "#666",
-                        marginTop: 2,
-                        marginLeft: 24, // Align with icon
+                        fontWeight: 500,
+                        color: "inherit",
+                        textDecoration: "none",
+                        "&:hover": { textDecoration: "underline" },
                       }}
                     >
-                      <span>{cleanMimeType(message.content.mimeType)}</span>
-                      <span>{formatFileSize(message.content.fileSize)}</span>
-                    </div>
+                      {message.content.fileName}
+                    </a>
                   </div>
-                )}
-                <Typography
-                  variant="caption"
-                  display="block"
-                  mt={0.5}
-                  textAlign={isOwn ? "right" : "left"}
-                >
-                  {message.sender} —{" "}
-                  {new Date(message.timestamp).toLocaleTimeString()}
-                </Typography>
-              </MessageBubble>
-            </Box>
-          );
-        })}
+
+                  {/* Meta info row */}
+                  <div
+                    style={{
+                      display: "flex",
+                      gap: 12,
+                      fontSize: 12,
+                      color: "#666",
+                      marginTop: 2,
+                      marginLeft: 24, // Align with icon
+                    }}
+                  >
+                    <span>{cleanMimeType(message.content.mimeType)}</span>
+                    <span>{formatFileSize(message.content.fileSize)}</span>
+                  </div>
+                </div>
+              ) : (
+                <Typography variant="body2">{message.content}</Typography>
+              )}
+              <Typography
+                variant="caption"
+                display="block"
+                mt={0.5}
+                textAlign={message.sender === user.name ? "right" : "left"}
+              >
+                {message.sender} —{" "}
+                {new Date(message.timestamp).toLocaleTimeString()}
+              </Typography>
+            </MessageBubble>
+            <Typography variant="caption" color="text.secondary">
+              {new Date(message.timestamp).toLocaleTimeString()}
+            </Typography>
+          </Box>
+        ))}
         <div ref={messagesEndRef} />
-      </MessageList>
-      <MessageInput>
+      </Box>
+
+      <Box sx={{ 
+        display: 'flex', 
+        gap: 1, 
+        alignItems: 'center',
+        bgcolor: 'background.paper',
+        p: 1,
+        borderRadius: 1
+      }}>
         <TextField
           fullWidth
-          placeholder={connected ? "Type a message..." : "Connecting..."}
+          variant="outlined"
+          placeholder="Введите сообщение..."
           value={newMessage}
           onChange={(e) => setNewMessage(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && handleSendMessage()}
-          disabled={!connected}
+          onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+          size="small"
+          sx={{
+            '& .MuiOutlinedInput-root': {
+              borderRadius: '20px',
+            }
+          }}
         />
         <input
           type="file"
           ref={fileInputRef}
-          style={{ display: "none" }}
-          onChange={handleFileChange}
+          style={{ display: 'none' }}
+          onChange={handleFileUpload}
         />
         <Button
           type="text"
           icon={<PaperClipOutlined />}
-          onClick={() => fileInputRef.current.click()}
-          disabled={!connected}
+          onClick={() => fileInputRef.current?.click()}
           style={{
-            fontSize: "18px",
-            color: newMessage ? "#b29262" : "rgba(0, 0, 0, 0.25)",
+            fontSize: '18px',
+            color: '#b29262',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            padding: 0
           }}
         />
-
-        {/* Send Button (icon version) */}
         <Button
           type="text"
           icon={<SendOutlined />}
           onClick={handleSendMessage}
-          disabled={!newMessage.trim() || !connected}
+          disabled={!newMessage.trim()}
           style={{
-            fontSize: "18px",
-            color: newMessage ? "#b29262" : "rgba(0, 0, 0, 0.25)",
+            fontSize: '18px',
+            color: newMessage.trim() ? '#b29262' : 'rgba(0, 0, 0, 0.25)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '40px',
+            height: '40px',
+            borderRadius: '50%',
+            padding: 0
           }}
         />
-      </MessageInput>
-    </ChatContainer>
+      </Box>
+    </Box>
   );
 };
 

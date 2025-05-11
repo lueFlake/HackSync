@@ -20,10 +20,10 @@ interface JdbiTeamRepository : TeamRepository {
     @SqlQuery("SELECT * FROM teams WHERE id = :id")
     override fun getById(@Bind("id") id: UUID): Team?
 
-    @SqlUpdate("INSERT INTO teams (id, name, hackathon_id) VALUES (:id, :name, :hackathonId) RETURNING *")
+    @SqlUpdate("INSERT INTO teams (id, name) VALUES (:id, :name) RETURNING *")
     override fun insert(@BindBean team: Team)
 
-    @SqlUpdate("UPDATE teams SET name = :name, hackathon_id = :hackathonId WHERE id = :id")
+    @SqlUpdate("UPDATE teams SET name = :name WHERE id = :id")
     override fun update(@BindBean team: Team)
 
     @SqlUpdate("DELETE FROM teams WHERE id = :id")

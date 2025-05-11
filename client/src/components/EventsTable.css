@@ -1,0 +1,7 @@
+.selected-row {
+  background-color: #f6ffed !important;
+}
+
+.selected-row:hover > td {
+  background-color: #f6ffed !important;
+} 

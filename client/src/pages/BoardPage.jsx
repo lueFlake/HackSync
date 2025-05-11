@@ -1,11 +1,13 @@
 import React from 'react';
-import { Typography, Box } from '@mui/material';
-import PageContainer from '../components/PageContainer';
 import KanbanBoard from '../components/KanbanBoard';
+import PageContainer from '../components/PageContainer';
+import { useSelectedHackathon } from '../hooks/useSelectedHackathon';
 
-const BoardPage = ({ event }) => {
+const BoardPage = () => {
+  const { selectedHackathon } = useSelectedHackathon();
+  
   return (
-    <PageContainer title={`Доска задач: ${event?.name || 'Событие не выбрано'}`}>
+    <PageContainer title={selectedHackathon ? `Доска - ${selectedHackathon.name}` : "Доска"}>
       <KanbanBoard />
     </PageContainer>
   );
