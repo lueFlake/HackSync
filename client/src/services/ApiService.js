@@ -65,7 +65,6 @@ export class ApiService {
    * @param {number|null} cacheDuration - Длительность кэша в миллисекундах
    */
   static async request(endpoint, method = "GET", body = null, retry = true, timeoutMs = null, useCache = false, cacheDuration = null) {
-    // Check cache for GET requests
     if (useCache && method === "GET") {
       const cacheKey = `${endpoint}${body ? JSON.stringify(body) : ''}`;
       const cachedData = this._getCachedData(cacheKey);

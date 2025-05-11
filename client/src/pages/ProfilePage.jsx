@@ -1,69 +1,121 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import {
-  Card,
-  Typography,
-  Button,
-  Avatar,
-  Divider,
-  Space,
-  Row,
-  Col,
-  List,
-  Tag
-} from 'antd';
-import {
-  UserOutlined,
-  MailOutlined,
   EditOutlined,
   LogoutOutlined,
+  MailOutlined,
+  TeamOutlined,
   TrophyOutlined,
-  TeamOutlined
+  UserAddOutlined,
+  UserOutlined
 } from '@ant-design/icons';
+import {
+  Avatar,
+  Button,
+  Card,
+  Col,
+  Divider,
+  Form,
+  Input,
+  List,
+  message,
+  Modal,
+  Row,
+  Space,
+  Spin,
+  Tag,
+  Typography
+} from 'antd';
+import React, { useEffect, useRef, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
+import { ApiService } from '../services/ApiService';
+import AuthService from '../services/AuthService';
 
 const { Title, Text } = Typography;
 
 const ProfilePage = () => {
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
+  const [teams, setTeams] = useState([]);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [form] = Form.useForm();
+  const fileInputRef = useRef(null);
 
-  // Моковые данные пользователя
-  const [user, setUser] = useState({
-    name: 'Иван Иванов',
-    email: 'ivan@example.com',
-    role: 'Fullstack разработчик',
-    teams: [
-      {
-        id: 1,
-        name: 'Quantum Hackers',
-        event: 'Hackathon 2023',
-        position: '1 место',
-        role: 'Тимлид',
-        technologies: ['React', 'Node.js', 'MongoDB']
-      },
-      {
-        id: 2,
-        name: 'Code Breakers',
-        event: 'AI Challenge 2022',
-        position: 'Финалисты',
-        role: 'Backend разработчик',
-        technologies: ['Python', 'TensorFlow', 'Docker']
-      },
-      {
-        id: 3,
-        name: 'Byte Force',
-        event: 'Blockchain Weekend',
-        position: 'Участники',
-        role: 'Solidity разработчик',
-        technologies: ['Solidity', 'Web3.js', 'Ethereum']
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const userData = await AuthService.getCurrentUser();
+        setUser(userData);
+
+        // Fetch user's teams
+        const userTeams = await ApiService.request(`/users/${userData.userId}/teams`, "GET", null, true);
+        setTeams(userTeams);
+      } catch (error) {
+        console.error('Failed to fetch user data:', error);
+        // Handle error appropriately
+      } finally {
+        setLoading(false);
       }
-    ]
-  });
+    };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+    fetchUserData();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await ApiService.logout();
+      localStorage.removeItem('token');
+      navigate('/login');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   };
+
+  const showModal = () => {
+    form.setFieldsValue({
+      name: user.name,
+      email: user.email
+    });
+    setIsModalVisible(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+    form.resetFields();
+  };
+
+  const handleSubmit = async () => {
+    try {
+      const values = await form.validateFields();
+      const updatedUser = await ApiService.updateUser(user.userId, values);
+      setUser(updatedUser);
+      setIsModalVisible(false);
+      message.success('Профиль успешно обновлен');
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+      message.error('Не удалось обновить профиль');
+    }
+  };
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Spin size="large" />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  if (!user) {
+    return (
+      <PageContainer>
+        <div style={{ textAlign: 'center', padding: '50px' }}>
+          <Text>Failed to load user data</Text>
+        </div>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>
@@ -84,6 +136,7 @@ const ProfilePage = () => {
               <Button
                 type="primary"
                 icon={<EditOutlined />}
+                onClick={showModal}
                 block
               >
                 Редактировать профиль
@@ -115,13 +168,13 @@ const ProfilePage = () => {
           }>
             <List
               itemLayout="vertical"
-              dataSource={user.teams}
+              dataSource={teams}
               renderItem={team => (
                 <List.Item
                   key={team.id}
                   extra={
-                    <Tag icon={<TrophyOutlined />} color={team.position.includes('1') ? 'gold' : 'default'}>
-                      {team.position}
+                    <Tag icon={<TrophyOutlined />} color={team.position === 1 ? 'gold' : 'default'}>
+                      {team.position === 1 ? '1 место' : team.position === 2 ? '2 место' : team.position === 3 ? '3 место' : 'Участник'}
                     </Tag>
                   }
                 >
@@ -130,13 +183,25 @@ const ProfilePage = () => {
                     description={team.event}
                   />
                   <div style={{ marginTop: 8 }}>
-                    <Text strong>Роль: </Text>
-                    <Text>{team.role}</Text>
+                    <Text strong>Участники команды: </Text>
+                    <Space size={[0, 8]} wrap style={{ marginTop: 4 }}>
+                      {team.members?.map(member => (
+                        <Link
+                          key={member.id}
+                          to={`/profile/${member.id}`}
+                          style={{ marginRight: 8 }}
+                        >
+                          <Tag icon={<UserAddOutlined />}>
+                            {member.name}
+                          </Tag>
+                        </Link>
+                      ))}
+                    </Space>
                   </div>
                   <div style={{ marginTop: 8 }}>
                     <Text strong>Технологии: </Text>
                     <Space size={[0, 8]} wrap style={{ marginTop: 4 }}>
-                      {team.technologies.map(tech => (
+                      {team.technologies?.map(tech => (
                         <Tag key={tech}>{tech}</Tag>
                       ))}
                     </Space>
@@ -147,6 +212,49 @@ const ProfilePage = () => {
           </Card>
         </Col>
       </Row>
+
+      <Modal
+        title="Редактировать профиль"
+        open={isModalVisible}
+        onOk={handleSubmit}
+        onCancel={handleCancel}
+        okText="Сохранить"
+        cancelText="Отмена"
+      >
+        <Form
+          form={form}
+          layout="vertical"
+        >
+          <Form.Item
+            name="name"
+            label="Имя"
+            rules={[
+              {
+                required: true,
+                message: 'Пожалуйста, введите ваше имя',
+              },
+            ]}
+          >
+            <Input prefix={<UserOutlined />} placeholder="Введите ваше имя" />
+          </Form.Item>
+          <Form.Item
+            name="email"
+            label="Email"
+            rules={[
+              {
+                required: true,
+                message: 'Пожалуйста, введите ваш email',
+              },
+              {
+                type: 'email',
+                message: 'Пожалуйста, введите корректный email',
+              },
+            ]}
+          >
+            <Input prefix={<MailOutlined />} placeholder="Введите ваш email" />
+          </Form.Item>
+        </Form>
+      </Modal>
     </PageContainer>
   );
 };
