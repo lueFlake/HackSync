@@ -1,6 +1,14 @@
 CREATE TYPE role_type AS ENUM ('PARTICIPANT', 'CAPTAIN', 'MODERATOR');
 CREATE TYPE priority_type AS ENUM ('LOW', 'MEDIUM', 'HIGH');
 
+-- Revoked refresh tokens table
+CREATE TABLE revoked_tokens (
+    token_hash TEXT PRIMARY KEY,
+    expires_at TIMESTAMPTZ NOT NULL
+);
+
+CREATE INDEX idx_revoked_tokens_expires_at ON revoked_tokens(expires_at);
+
 -- Users table
 CREATE TABLE users (
     id UUID PRIMARY KEY,

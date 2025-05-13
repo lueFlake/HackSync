@@ -18,6 +18,9 @@ import io.github.smiley4.ktoropenapi.post
 import io.github.smiley4.ktoropenapi.put
 import io.github.smiley4.ktoropenapi.delete
 import io.github.smiley4.ktoropenapi.config.RouteConfig
+import io.ktor.http.content.*
+import io.ktor.server.plugins.*
+import java.io.File
 import java.util.*
 
 val postUser: RouteConfig.() -> Unit = {
@@ -184,7 +187,6 @@ val getUserLink: RouteConfig.() -> Unit = {
         }
     }
 }
-
 fun Route.addUserRoutes() {
     route("/users") {
         post(UserDocs.postUser) {
@@ -244,6 +246,132 @@ fun Route.addUserRoutes() {
             }
             call.scope.get<UserService>().delete(DeleteUserCommand(id))
             call.respond(HttpStatusCode.OK)
+        }
+
+        post("/{id}/avatar") {
+            val userId = UUID.fromString(call.parameters["id"]) ?: run {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid user ID"))
+                return@post
+            }
+
+            val maxFileSize = 5 * 1024 * 1024 // 5 MB
+            var fileUrl: String? = null
+            // Get user and check if exists
+            val user = call.scope.get<UserService>().read(ReadUserCommand(userId))
+
+            try {
+                val multipart = call.receiveMultipart()
+
+                multipart.forEachPart { part ->
+                    if (part is PartData.FileItem) {
+                        
+                        // Check file type
+                        val fileExtension = part.originalFileName?.substringAfterLast('.', "")?.lowercase()
+                        val allowedExtensions = setOf("jpg", "jpeg", "png", "webp")
+                        
+                        if (fileExtension !in allowedExtensions) {
+                            throw BadRequestException("Only JPG, PNG, or WEBP images are allowed")
+                        }
+
+                        // Check file size
+                        val contentLength = part.headers["Content-Length"]?.toLongOrNull()
+                        if (contentLength != null && contentLength > maxFileSize) {
+                            throw BadRequestException("File size exceeds 5MB limit")
+                        }
+
+                        // Delete old avatar if exists
+                        user.avatarUrl?.let { oldUrl ->
+                            try {
+                                val oldFile = File(oldUrl.removePrefix("/"))
+                                if (oldFile.exists()) {
+                                    oldFile.delete()
+                                    // logger.info("Deleted old avatar: ${oldFile.path}")
+                                }
+                            } catch (e: Exception) {
+                                // logger.error("Failed to delete old avatar", e)
+                                // Continue execution - file might already be deleted
+                            }
+                        }
+
+                        // Save new avatar
+                        val fileName = "avatar_${userId}.$fileExtension"
+                        val uploadDir = File("uploads/avatars").apply { mkdirs() }
+                        val file = File(uploadDir, fileName)
+
+                        part.streamProvider().use { input ->
+                            file.outputStream().buffered().use { output ->
+                                input.copyTo(output)
+                            }
+                        }
+
+                        fileUrl = "/uploads/avatars/$fileName"
+                    }
+                    part.dispose()
+                }
+
+                if (fileUrl != null) {
+                    call.scope.get<UserService>().update(UpdateUserCommand(
+                        id = userId,
+                        avatarUrl = fileUrl
+                    ))
+                    call.respond(mapOf("url" to fileUrl))
+                } else {
+                    throw BadRequestException("Failed to process uploaded file")
+                }
+            } catch (e: BadRequestException) {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to e.message))
+            } catch (e: Exception) {
+                 println("Avatar upload failed " + e.toString())
+                call.respond(HttpStatusCode.InternalServerError, mapOf("error" to "Failed to upload avatar"))
+            }
+        }
+
+        get("/{id}/avatar") {
+            val userId = UUID.fromString(call.parameters["id"]) ?: run {
+                call.respond(HttpStatusCode.BadRequest, mapOf("error" to "Invalid user ID"))
+                return@get
+            }
+            val user = call.scope.get<UserService>().read(ReadUserCommand(userId))
+
+            try {
+                // Check if user has avatar
+                val avatarUrl = user.avatarUrl ?: return@get call.respond(
+                    HttpStatusCode.NotFound,
+                    mapOf("error" to "User has no avatar")
+                )
+
+                // Get avatar file
+                val avatarFile = File(avatarUrl.removePrefix("/"))
+                if (!avatarFile.exists()) {
+                    return@get call.respond(
+                        HttpStatusCode.NotFound,
+                        mapOf("error" to "Avatar file not found")
+                    )
+                }
+
+                // Set cache headers
+                call.response.header(
+                    HttpHeaders.CacheControl,
+                    "public, max-age=31536000" // Cache for 1 year
+                )
+
+                // Set content type based on file extension
+                val contentType = when (avatarFile.extension.lowercase()) {
+                    "jpg", "jpeg" -> ContentType.Image.JPEG
+                    "png" -> ContentType.Image.PNG
+                    "webp" -> ContentType("image", "webp")
+                    else -> ContentType.Application.OctetStream
+                }
+                call.response.header(HttpHeaders.ContentType, contentType.toString())
+
+                // Send file
+                call.respondFile(avatarFile)
+            } catch (e: Exception) {
+                call.respond(
+                    HttpStatusCode.InternalServerError,
+                    mapOf("error" to "Failed to retrieve avatar")
+                )
+            }
         }
     }
 }

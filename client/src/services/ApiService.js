@@ -284,8 +284,27 @@ export class ApiService {
     return this.request(`/users/${id}`, "DELETE", null, true, timeoutMs);
   }
 
-  // Status ----------------------------------------------------------
+  static async uploadUserAvatar(userId, file, timeoutMs = this.DEFAULT_TIMEOUT) {
+    const formData = new FormData();
+    formData.append('file', file);
 
+    return this.request(
+      `/users/${userId}/avatar`,
+      'POST',
+      formData,
+      true,
+      timeoutMs,
+      false,
+      null,
+      true // skipJsonParse = true, answer may not be JSON
+    );
+  }
+
+  static getUserAvatarUrl(userId) {
+    return `${this.BASE_URL}/users/${userId}/avatar`;
+  }
+
+  // Status ----------------------------------------------------------
   static async getKanbanStatuses(timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
     return this.request("/kanban-statuses", "GET", null, true, timeoutMs, useCache);
   }
@@ -305,10 +324,12 @@ export class ApiService {
   static async deleteKanbanStatus(id, timeoutMs = this.DEFAULT_TIMEOUT) {
     return this.request(`/kanban-statuses/${id}`, "DELETE", null, true, timeoutMs);
   }
+
   // Chat ------------------------------------------------------------
   static async chatHistory(timeoutMs = this.DEFAULT_TIMEOUT, useCache = true) {
     return this.request(`/chat/history`, "GET", null, true, timeoutMs, useCache);
   }
+
 }
 
 export default ApiService;

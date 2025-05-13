@@ -1,9 +1,9 @@
 import {
+  CameraOutlined,
   EditOutlined,
   LogoutOutlined,
   MailOutlined,
   TeamOutlined,
-  TrophyOutlined,
   UserAddOutlined,
   UserOutlined
 } from '@ant-design/icons';
@@ -22,9 +22,10 @@ import {
   Space,
   Spin,
   Tag,
-  Typography
+  Typography,
+  Upload
 } from 'antd';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PageContainer from '../components/PageContainer';
 import { ApiService } from '../services/ApiService';
@@ -39,20 +40,24 @@ const ProfilePage = () => {
   const [teams, setTeams] = useState([]);
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [form] = Form.useForm();
-  const fileInputRef = useRef(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
         const userData = await AuthService.getCurrentUser();
         setUser(userData);
+        if (userData.avatarUrl) {
+          setAvatarUrl(ApiService.getUserAvatarUrl(userData.userId));
+        }
 
         // Fetch user's teams
         const userTeams = await ApiService.request(`/users/${userData.userId}/teams`, "GET", null, true);
         setTeams(userTeams);
       } catch (error) {
         console.error('Failed to fetch user data:', error);
-        // Handle error appropriately
+        message.error('Failed to load user data');
       } finally {
         setLoading(false);
       }
@@ -92,9 +97,40 @@ const ProfilePage = () => {
       setIsModalVisible(false);
       message.success('Профиль успешно обновлен');
     } catch (error) {
-      console.error('Failed to update profile:', error);
+      console.error('Не удалось обновить профиль:', error);
       message.error('Не удалось обновить профиль');
     }
+  };
+
+  const handleAvatarUpload = async (file) => {
+    try {
+      setUploadingAvatar(true);
+      const result = await ApiService.uploadUserAvatar(user.userId, file);
+      setAvatarUrl(ApiService.getUserAvatarUrl(user.userId));
+      message.success('Avatar uploaded successfully');
+      return false; // Prevent default upload behavior
+    } catch (error) {
+      message.error(error.message || 'Failed to upload avatar');
+      return false;
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const beforeUpload = (file) => {
+    const isImage = file.type.startsWith('image/');
+    if (!isImage) {
+      message.error('You can only upload image files!');
+      return false;
+    }
+
+    const isLt5M = file.size / 1024 / 1024 < 5;
+    if (!isLt5M) {
+      message.error('Image must be smaller than 5MB!');
+      return false;
+    }
+
+    return true;
   };
 
   if (loading) {
@@ -122,13 +158,42 @@ const ProfilePage = () => {
       <Row gutter={[16, 16]}>
         <Col xs={24} md={8}>
           <Card style={{ textAlign: 'center' }}>
-            <Avatar
-              size={128}
-              icon={<UserOutlined />}
-              style={{ marginBottom: 16, fontSize: 64 }}
-            />
-            <Title level={3}>{user.name}</Title>
-            <Text type="secondary">{user.role}</Text>
+            <div style={{
+              marginBottom: 16,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '16px'
+            }}>
+              <Avatar
+                size={160}
+                src={avatarUrl}
+                icon={<UserOutlined />}
+                style={{ fontSize: 80 }}
+              />
+              <Upload
+                name="avatar"
+                showUploadList={false}
+                beforeUpload={beforeUpload}
+                customRequest={({ file }) => handleAvatarUpload(file)}
+                style={{ width: '100%', maxWidth: '200px' }}
+              >
+                <Button
+                  type="primary"
+                  icon={<CameraOutlined />}
+                  loading={uploadingAvatar}
+                  style={{
+                    width: '100%',
+                    height: 'clamp(32px, 5vw, 40px)',
+                    fontSize: 'clamp(12px, 2vw, 14px)'
+                  }}
+                >
+                  Загрузить фото
+                </Button>
+              </Upload>
+            </div>
+            <Title level={3} style={{ fontSize: 'clamp(18px, 3vw, 24px)' }}>{user.name}</Title>
+            <Text type="secondary" style={{ fontSize: 'clamp(12px, 2vw, 14px)' }}>{user.role}</Text>
 
             <Divider />
 
@@ -172,11 +237,6 @@ const ProfilePage = () => {
               renderItem={team => (
                 <List.Item
                   key={team.id}
-                  extra={
-                    <Tag icon={<TrophyOutlined />} color={team.position === 1 ? 'gold' : 'default'}>
-                      {team.position === 1 ? '1 место' : team.position === 2 ? '2 место' : team.position === 3 ? '3 место' : 'Участник'}
-                    </Tag>
-                  }
                 >
                   <List.Item.Meta
                     title={team.name}

@@ -4,7 +4,7 @@ import moment from 'moment';
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSelectedHackathon } from '../hooks/useSelectedHackathon';
-import './EventsTable.css';
+import '../styles/EventsTable.css';
 
 const EventsTable = ({ data, onEdit, onDelete }) => {
   const navigate = useNavigate();

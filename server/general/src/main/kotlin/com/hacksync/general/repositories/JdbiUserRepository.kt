@@ -47,7 +47,8 @@ interface JdbiUserRepository : UserRepository {
         WHERE id = :id
         RETURNING id
     """)
-    override fun update(@Bind("email") email: String?,
+    override fun update(@Bind("id") id: UUID,
+                        @Bind("email") email: String?,
                         @Bind("name") name: String?,
                         @Bind("avatar_url") avatarUrl: String?)
 

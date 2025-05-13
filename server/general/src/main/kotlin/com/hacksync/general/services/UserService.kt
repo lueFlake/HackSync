@@ -38,10 +38,12 @@ class UserService(
     }
 
     suspend fun update(command: UpdateUserCommand) {
+        val user = read(ReadUserCommand(command.id))
         userRepository.update(
-            email = command.email,
-            name = command.name,
-            avatarUrl = command.avatarUrl
+            id = command.id,
+            email = command.email ?: user.email,
+            name = command.name ?: user.name,
+            avatarUrl = command.avatarUrl ?: user.avatarUrl
         )
         
         // Update the existing link or create a new one if it doesn't exist

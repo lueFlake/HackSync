@@ -22,10 +22,10 @@ interface JdbiHackathonRepository : HackathonRepository {
     @SqlQuery("SELECT * FROM hackathons WHERE id = :id")
     override fun getById(@Bind("id") id: UUID): Hackathon?
 
-    @SqlUpdate("INSERT INTO hackathons (id, name, description, date_of_register, date_of_start, date_of_end) VALUES (:id, :name, :description, :dateOfRegister, :dateOfStart, :dateOfEnd) RETURNING *")
+    @SqlUpdate("INSERT INTO hackathons (id, name, description, date_of_register, date_of_start, date_of_end, created_at, updated_at) VALUES (:id, :name, :description, :dateOfRegister, :dateOfStart, :dateOfEnd, :createdAt, :updatedAt) RETURNING *")
     override fun insert(@BindBean hackathon: Hackathon)
 
-    @SqlUpdate("UPDATE hackathons SET name = :name, description = :description, date_of_register = :dateOfRegister, date_of_start = :dateOfStart, date_of_end = :dateOfEnd WHERE id = :id")
+    @SqlUpdate("UPDATE hackathons SET name = :name, description = :description, date_of_register = :dateOfRegister, date_of_start = :dateOfStart, updated_at = :updatedAt, date_of_end = :dateOfEnd WHERE id = :id")
     override fun update(@BindBean hackathon: Hackathon)
 
     @SqlUpdate("DELETE FROM hackathons WHERE id = :id")

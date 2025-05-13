@@ -14,14 +14,15 @@ import java.util.*
 interface UserRepository {
     fun getAll(): List<User>
     fun getAll(skip: Int, limit: Int): List<User>
-    fun getById(@Bind("id") id: UUID): User?
-    fun delete(@Bind("id") id: UUID)
-    fun update(@BindBean entity: User)
-    fun update(@Bind("email") email: String?,
-               @Bind("name") name: String?,
-               @Bind("avatar_url") avatarUrl: String?)
-    fun insert(@BindBean entity: User)
-    fun getByEmail(@Bind("email") email: String): User?
-    fun updatePassword(@Bind("id") id: UUID, @Bind("password_hash") passwordHash: String)
-    fun updateLastLogin(@Bind("id") id: UUID)
+    fun getById(id: UUID): User?
+    fun delete(id: UUID)
+    fun update(entity: User)
+    fun update(id: UUID,
+               email: String?,
+               name: String?,
+               avatarUrl: String?)
+    fun insert(entity: User)
+    fun getByEmail(email: String): User?
+    fun updatePassword(id: UUID, passwordHash: String)
+    fun updateLastLogin(id: UUID)
 }
