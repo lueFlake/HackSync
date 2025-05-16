@@ -1,4 +1,4 @@
-  import {
+import {
   ArrowLeftOutlined,
   ClockCircleOutlined,
   TeamOutlined,
@@ -23,6 +23,7 @@ import TeamForm from "../components/forms/TeamForm";
 import PageContainer from "../components/PageContainer";
 import { useAuth } from "../contexts/AuthContext";
 import { useApi } from "../hooks/useApi";
+import { useSelectedHackathon } from "../hooks/useSelectedEvent";
 
 const TeamMembersCell = ({ teamId }) => {
   const [members, setMembers] = useState([]);
@@ -74,7 +75,7 @@ const TeamActionsCell = ({ record, onEdit, onDelete, onJoin }) => {
     const checkMembership = async () => {
       try {
         const response = await api.get(`/teams/${record.id}/members`);
-        setIsMember(response.data.some((member) => member.id === user.id));
+        setIsMember(response.data.some((member) => member.id === user?.userId));
       } catch (error) {
         //console.error('Failed to check team membership:', error);
       } finally {
@@ -82,7 +83,7 @@ const TeamActionsCell = ({ record, onEdit, onDelete, onJoin }) => {
       }
     };
     checkMembership();
-  }, [record.id, user.id]);
+  }, [record.id, user?.userId]);
 
   if (loading) {
     return <Spin size="small" />;
@@ -97,6 +98,11 @@ const TeamActionsCell = ({ record, onEdit, onDelete, onJoin }) => {
           onClick={() => onJoin(record.id)}
         >
           Присоединиться
+        </Button>
+      )}
+      {isMember && (
+        <Button type="link" disabled>
+          Вы уже в команде
         </Button>
       )}
       <Button type="link" onClick={() => onEdit(record)}>
@@ -123,6 +129,7 @@ const EventDetailsPage = () => {
   const [deadlineForm] = Form.useForm();
   const api = useApi();
   const { user } = useAuth();
+  const { selectedHackathon, updateSelectedTeamId } = useSelectedHackathon();
 
   useEffect(() => {
     loadEventDetails();
@@ -304,17 +311,15 @@ const EventDetailsPage = () => {
 
   const handleJoinTeam = async (teamId) => {
     if (!user?.userId) {
-      //message.error('Не удалось определить текущего пользователя');
+      message.error('Не удалось определить текущего пользователя');
       return;
     }
     try {
-      await api.post(`/teams/${teamId}/users/${user.userId}`, {
-        role: "PARTICIPANT",
-      });
-      message.success("Вы успешно присоединились к команде");
+      message.success('Команда выбрана');
+      updateSelectedTeamId(teamId);
       loadTeams();
     } catch (error) {
-      //message.error('Не удалось присоединиться к команде');
+      message.error('Не удалось выбрать команду');
     }
   };
 

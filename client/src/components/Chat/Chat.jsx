@@ -15,7 +15,7 @@ import { Button } from "antd";
 import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useApi } from "../../hooks/useApi";
-import { useSelectedHackathon } from "../../hooks/useSelectedHackathon";
+import { useSelectedHackathon } from "../../hooks/useSelectedEvent";
 import { ApiService } from "../../services/ApiService";
 
 const MessageBubble = styled(({ isOwn, ...other }) => <Box {...other} />)(
@@ -187,14 +187,14 @@ const Chat = () => {
 
     // Add message to local state immediately
     setMessages(prev => [...prev, message]);
-    
+
     // Send through WebSocket
     if (socket && socket.readyState === WebSocket.OPEN) {
       socket.send(JSON.stringify(message));
     } else {
       queueMessage(message);
     }
-    
+
     setNewMessage('');
   };
 
@@ -226,7 +226,7 @@ const Chat = () => {
 
         // Add message to local state
         setMessages(prev => [...prev, message]);
-        
+
         // Send through WebSocket
         if (socket && socket.readyState === WebSocket.OPEN) {
           socket.send(JSON.stringify(message));
@@ -249,9 +249,9 @@ const Chat = () => {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//localhost:8080/chat/${selectedHackathon.id}`;
       console.log('Connecting to WebSocket URL:', wsUrl);
-      
+
       const ws = new WebSocket(wsUrl);
-      
+
       ws.onopen = () => {
         console.log('WebSocket connection established successfully');
         setIsConnected(true);
@@ -265,7 +265,7 @@ const Chat = () => {
           const message = JSON.parse(event.data);
           // Only add message if it's from another user
           if (message.sender !== user.name) {
-          setMessages(prev => [...prev, message]);
+            setMessages(prev => [...prev, message]);
           }
         } catch (error) {
           console.error('Failed to parse message:', error);
@@ -475,9 +475,9 @@ const Chat = () => {
         <div ref={messagesEndRef} />
       </Box>
 
-      <Box sx={{ 
-        display: 'flex', 
-        gap: 1, 
+      <Box sx={{
+        display: 'flex',
+        gap: 1,
         alignItems: 'center',
         bgcolor: 'background.paper',
         p: 1,

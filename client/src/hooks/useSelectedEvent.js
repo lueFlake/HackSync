@@ -3,12 +3,17 @@ import { useApi } from './useApi';
 
 export const useSelectedHackathon = () => {
     const [selectedHackathon, setSelectedHackathon] = useState(null);
+    const [selectedTeamId, setSelectedTeamId] = useState(null);
     const api = useApi();
 
     useEffect(() => {
-        const storedId = localStorage.getItem('selectedEventId');
-        if (storedId) {
-            loadHackathon(storedId);
+        const storedEventId = localStorage.getItem('selectedEventId');
+        const storedTeamId = localStorage.getItem('selectedTeamId');
+        if (storedEventId) {
+            loadHackathon(storedEventId);
+        }
+        if (storedTeamId) {
+            setSelectedTeamId(storedTeamId);
         }
     }, []);
 
@@ -33,5 +38,20 @@ export const useSelectedHackathon = () => {
         }
     };
 
-    return { selectedHackathon, setSelectedHackathonId };
+    const updateSelectedTeamId = (id) => {
+        if (id) {
+            localStorage.setItem('selectedTeamId', id);
+            setSelectedTeamId(id);
+        } else {
+            localStorage.removeItem('selectedTeamId');
+            setSelectedTeamId(null);
+        }
+    };
+
+    return {
+        selectedHackathon,
+        selectedTeamId,
+        setSelectedHackathonId,
+        updateSelectedTeamId
+    };
 }; 

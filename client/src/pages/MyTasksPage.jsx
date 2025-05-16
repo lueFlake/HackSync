@@ -1,18 +1,16 @@
 import {
-    Button,
-    DatePicker,
-    Divider,
-    Form,
-    Input,
-    notification,
-    Select,
-    Spin,
+  Button,
+  DatePicker,
+  Divider,
+  Form,
+  Input,
+  notification,
+  Select,
+  Spin,
 } from "antd";
 import { useEffect, useState } from "react";
 import MyTasksTable from "../components/MyTasksTable";
-import PageContainer from "../components/PageContainer";
 import { useAuth } from "../contexts/AuthContext";
-import { useSelectedHackathon } from '../hooks/useSelectedHackathon';
 import { ApiService } from "../services/ApiService";
 
 const { Option } = Select;
@@ -24,7 +22,6 @@ const MyTasksPage = () => {
   const [isCreatingTask, setIsCreatingTask] = useState(false);
   const [form] = Form.useForm();
   const { user, isLoading, isAuthenticated } = useAuth();
-  const { selectedHackathon } = useSelectedHackathon();
 
   useEffect(() => {
     const fetchTasksAndStatuses = async () => {
@@ -86,13 +83,12 @@ const MyTasksPage = () => {
         description: values.description,
         priority: values.priority,
         userId: user.userId,
-        hackathonId: null, // or provide actual event ID if applicable
+        hackathonId: null,
         dueDate: values.dueDate?.toISOString(),
       };
 
       const savedTask = await ApiService.createTask(newTaskPayload);
 
-      // resolve status to display name + color
       const statusMeta = kanbanStatuses.find((s) => s.id === savedTask.status);
       setTasks([
         ...tasks,
@@ -118,7 +114,7 @@ const MyTasksPage = () => {
   };
 
   return (
-    <PageContainer title={selectedHackathon ? `Мои задачи - ${selectedHackathon.name}` : "Мои задачи"}>
+    <>
       <Divider orientation="left" />
       <Button
         type="primary"
@@ -173,7 +169,7 @@ const MyTasksPage = () => {
       ) : (
         <MyTasksTable tasks={tasks} />
       )}
-    </PageContainer>
+    </>
   );
 };
 

@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import EventsTable from "../components/EventsTable";
 import PageContainer from "../components/PageContainer";
 import { useApi } from "../hooks/useApi";
-import { useSelectedHackathon } from "../hooks/useSelectedHackathon";
+import { useSelectedHackathon } from "../hooks/useSelectedEvent";
 const { TextArea } = Input;
 const { Option } = Select;
 
