@@ -53,8 +53,28 @@ const ProfilePage = () => {
         }
 
         // Fetch user's teams
-        const userTeams = await ApiService.request(`/users/${userData.userId}/teams`, "GET", null, true);
-        setTeams(userTeams);
+        const teamIds = await ApiService.request(`/teams/users/${userData.userId}`, "GET", null, true);
+        const teamsWithDetails = await Promise.all(
+          teamIds.map(async (teamId) => {
+            const teamDetails = await ApiService.request(`/teams/${teamId}`, "GET", null, true);
+            const members = await ApiService.request(`/teams/${teamId}/members`, "GET", null, true);
+            const memberDetails = await Promise.all(
+              members.map(async (memberId) => {
+                const userDetails = await ApiService.request(`/users/${memberId}`, "GET", null, true);
+                return {
+                  id: memberId,
+                  name: userDetails.name,
+                  email: userDetails.email
+                };
+              })
+            );
+            return {
+              ...teamDetails,
+              members: memberDetails
+            };
+          })
+        );
+        setTeams(teamsWithDetails);
       } catch (error) {
         console.error('Failed to fetch user data:', error);
         message.error('Failed to load user data');
@@ -193,7 +213,6 @@ const ProfilePage = () => {
               </Upload>
             </div>
             <Title level={3} style={{ fontSize: 'clamp(18px, 3vw, 24px)' }}>{user.name}</Title>
-            <Text type="secondary" style={{ fontSize: 'clamp(12px, 2vw, 14px)' }}>{user.role}</Text>
 
             <Divider />
 
